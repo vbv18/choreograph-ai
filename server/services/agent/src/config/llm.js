@@ -5,7 +5,7 @@ import { ChatOpenRouter } from "@langchain/openrouter";
 // Groq with gpt-oss-120b: ultra-fast, robust for chat, routing, and high-quality coding artifacts
 export const groq = new ChatGroq({
   model: "openai/gpt-oss-120b",
-  temperature: 0.1,
+  temperature: 1,
   apiKey: process.env.GROQ_API_KEY,
 });
 

@@ -217,10 +217,10 @@ export default function SideBar() {
               <>
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-7 h-7 rounded-lg bg-linear-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shadow-xs shadow-indigo-500/30 shrink-0">
-                    AF
+                    CA
                   </div>
                   <span className="text-[14.5px] font-semibold text-slate-100 tracking-tight truncate">
-                    AgentForge
+                    Choreograph AI
                   </span>
                   <span className="text-[10px] font-medium text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-1.5 py-0.5 rounded-md shrink-0">
                     {userData?.plan || "free"}

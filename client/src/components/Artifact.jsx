@@ -266,7 +266,7 @@ export default function Artifact() {
           </h3>
 
           <p className="text-xs text-slate-400 max-w-[320px] leading-relaxed mb-6">
-            When you ask AgentForge to generate code, multi-file applications,
+            When you ask Choreograph AI to generate code, multi-file applications,
             or algorithms, your interactive code workspace and files will emerge
             here.
           </p>

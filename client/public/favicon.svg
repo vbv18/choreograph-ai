@@ -6,5 +6,5 @@
     </linearGradient>
   </defs>
   <rect width="32" height="32" rx="8" fill="url(#af-grad)" />
-  <text x="16" y="21" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="13" fill="#ffffff" text-anchor="middle" letter-spacing="-0.5">AF</text>
+  <text x="16" y="21" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="13" fill="#ffffff" text-anchor="middle" letter-spacing="-0.5">CA</text>
 </svg>

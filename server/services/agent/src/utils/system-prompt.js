@@ -21,7 +21,7 @@ export default function getSystemPrompt(agent, content = "") {
       return prompts.pdf + content;
 
     case "ppt":
-      return prompts.ppt;
+      return prompts.ppt + content;
 
     case "search":
       return prompts.search + content;

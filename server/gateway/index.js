@@ -27,6 +27,7 @@ app.use("/api/v1/auth", proxy(process.env.AUTH_SERVICE_URL));
 app.use(authMiddleware);
 app.use("/api/v1/chat", proxyWithHeader(process.env.CHAT_SERVICE_URL));
 app.use("/api/v1/agent", proxyWithHeader(process.env.AGENT_SERVICE_URL));
+app.use("/api/v1/billing", proxyWithHeader(process.env.BILLING_SERVICE_URL));
 app.get("/api/v1/me", getCurrentUser);
 
 app.listen(process.env.PORT, () => {

@@ -1,22 +1,26 @@
-# AgentForge — Frontend Audit: Issue Register
+# Choreograph AI — Technical Audit & Issue Register
 
-**Audit date:** October 2026
-**Scope:** `/client` — UI components, design system, typography, accessibility, bundle size, UX
-**Product:** Autonomous AI agent orchestration workbench for engineers (Coding, Search, PPT, PDF, Image, Auto agents)
-
-## Summary
-
-| Category | Count | Severity |
-| :--- | :---: | :--- |
-| [A. Code bugs](#a-code-bugs) | 8 | P0 |
-| [B. AI-generated design tells](#b-ai-generated-design-tells) | 5 | P1 |
-| [C. Component UX deficiencies](#c-component-ux-deficiencies) | 21 | P1–P2 |
-
-**Fix first:** A1, A4, A8 (broken behavior, render violations, 70% bundle bloat).
+**Audit date:** October–November 2026  
+**Scope:** Frontend (`/client`), Backend services (`/server/gateway`, `/server/services/*`), and Cross-cutting architecture  
+**Product:** Autonomous AI agent orchestration workbench (Coding, Search, PPT, PDF, Image, Auto agents)
 
 ---
 
-## A. Code bugs
+## Overview & Status
+
+| Scope | Category | Open | Resolved / In Progress | Priority |
+| :--- | :--- | :---: | :---: | :---: |
+| Frontend | [Frontend Code Bugs](#a-frontend-code-bugs) | 8 | 0 | P0 |
+| Frontend | [AI-Generated Design Tells](#b-frontend-design-tells) | 4 | 1 (Rebranding complete) | P1 |
+| Frontend | [Component UX & Ergonomics](#c-frontend-ux-deficiencies) | 20 | 1 (C5.2 resolved) | P1–P2 |
+| Backend | [Agent & Generation Services](#d-backend-agent--generation-services) | 3 | 3 (PPT, PDF, Image S3) | P0–P1 |
+| Backend | [Gateway & Routing](#e-backend-gateway--routing) | 2 | 1 (Billing proxy added) | P1 |
+| Backend | [Auth & Session Management](#f-backend-auth--session-management) | 3 | 0 (WIP: credit/plan sync) | P0–P1 |
+| Backend | [Billing & Payments Service](#g-backend-billing--payments-service) | 4 | 0 (WIP: Razorpay webhook) | P0–P1 |
+
+---
+
+## A. Frontend Code Bugs
 
 ### A1. Ternary trapped inside template literal — `ChatInput.jsx:189–194`
 ```jsx
@@ -24,154 +28,105 @@ className={`
   isActive ? "text-white" : "text-slate-500"
 `}
 ```
-**Problem:** Missing `${}`. The browser receives the literal text as the class string, so the active agent icon never turns white.
+**Problem:** Missing `${}`. The browser receives literal text as class names, so active agent icon color does not toggle.  
 **Fix:** `` className={`${isActive ? "text-white" : "text-slate-500"}`} ``
 
 ### A2. Invalid Tailwind arbitrary value — `ChatInput.jsx:181`
 ```jsx
 shadow-[0_1px_8px_rgba(99, 102, 241, .35)]
 ```
-**Problem:** Spaces inside bracket utilities break Tailwind's class parsing; the shadow never applies.
+**Problem:** Spaces in arbitrary brackets break Tailwind CSS parser.  
 **Fix:** `shadow-[0_1px_8px_rgba(99,102,241,0.35)]`
 
 ### A3. Mixed Tailwind v3 and v4 gradient syntax
-| Syntax | Locations |
-| :--- | :--- |
-| v3 `bg-gradient-to-r/br` | `ChatInput.jsx:181`, `MessageBubble.jsx:28` |
-| v4 `bg-linear-to-r/br` | `SideBar.jsx:279`, `MessageList.jsx:24`, `NotFound.jsx:42` |
-
-**Problem:** Fragile builds; classes may silently fail to compile after Vite or Tailwind updates.
-**Fix:** Standardize on the installed Tailwind version. (Gradients are being removed anyway; see B1.)
+- v3 `bg-gradient-to-r/br` (`ChatInput.jsx:181`, `MessageBubble.jsx:28`)
+- v4 `bg-linear-to-r/br` (`SideBar.jsx:279`, `MessageList.jsx:24`, `NotFound.jsx:42`)  
+**Fix:** Standardize and migrate to solid states with cyan focus borders.
 
 ### A4. State updates during render — `ChatInput.jsx:36–40`
-```jsx
-if (initialPrompt && initialPrompt !== prevInitialPrompt) {
-  setPrevInitialPrompt(initialPrompt);
-  setValue(initialPrompt);
-  onResetPrompt?.();
-}
-```
-**Problem:** Setters and a parent callback run in the render body. This triggers React warnings and cascading re-renders.
-**Fix:** Move into a `useEffect` keyed on `initialPrompt`.
+**Problem:** Direct state updater in component render body causing React lifecycle warnings.  
+**Fix:** Wrap inside `useEffect` keyed on `initialPrompt`.
 
 ### A5. Direct DOM mutation — `MessageBubble.jsx:39`
 ```jsx
 onError={(e) => e.currentTarget.remove()}
 ```
-**Problem:** Removing nodes behind React's back can throw on re-render or unmount.
-**Fix:** Track image failure in state and render a fallback.
+**Problem:** Direct DOM removal bypasses React reconciliation.  
+**Fix:** Maintain image error status in state and render fallback.
 
 ### A6. Title truncation mismatch — `ChatInput.jsx:66–68`
-```jsx
-prompt.length > 20 ? prompt.slice(0, 40) + "..." : prompt
-```
-**Problem:** For prompts of 21–40 characters, the slice returns the full string and still appends `...`.
-**Fix:** Use one constant for both: `prompt.length > 32 ? prompt.slice(0, 32) + "..." : prompt`
+**Problem:** Prompt condition checks `> 20` but slices `(0, 40) + "..."`.  
+**Fix:** Standardize truncation threshold (e.g., `prompt.length > 32 ? prompt.slice(0, 32) + "..." : prompt`).
 
 ### A7. Loose equality — `MessageBubble.jsx:119`
-```jsx
-{copiedCode == value ? ... : ...}
-```
-**Problem:** Type coercion can produce false "copied" confirmations and violates lint standards.
-**Fix:** Use `===`.
+**Problem:** `copiedCode == value` uses loose equality.  
+**Fix:** Replace with strict equality `===`.
 
 ### A8. Monolithic syntax highlighter import — `MessageBubble.jsx:6`
-```js
-import SyntaxHighlighter from "react-syntax-highlighter";
-import { atomOneDark } from "react-syntax-highlighter/dist/cjs/styles/hljs";
-```
-**Problem:** Bundles 190+ language grammars synchronously. Build output: `index.js` at **1,650 kB (503 kB gzip)**, with the highlighter making up more than 70% of it. Slow first load and poor Core Web Vitals.
-**Fix:** Use `react-syntax-highlighter/dist/esm/prism-light` and register only needed languages (`javascript`, `typescript`, `python`, `json`, `bash`, `html`, `css`, `sql`, `yaml`), or lazy-load.
+**Problem:** Full package import bloats bundle over 1.6MB.  
+**Fix:** Switch to `prism-light` and register targeted languages only.
 
 ---
 
-## B. AI-generated design tells
+## B. Frontend Design Tells
 
-| # | Tell | Where | Fix |
-| :-: | :--- | :--- | :--- |
-| B1 | Indigo-violet gradient on every action | Sidebar "New Chat", ChatInput Send and active chip, user MessageBubble, NotFound "Return Home", Login Google button shadow | Solid buttons with crisp borders; reserve color for state |
-| B2 | Neon blur spheres as decoration | `NotFound.jsx:11–12` (`bg-indigo-500/10 blur-2xl`) | Remove; use a structural terminal-grid motif |
-| B3 | Tracked-out all-caps eyebrow labels | `NotFound.jsx:18`, `MessageBubble.jsx:112` | Sentence case with clear state indicators |
-| B4 | No design tokens; 7 hardcoded dark colors | `#0d0f14`, `#0c0d12`, `#13151c`, `#111318`, `#1b1d24`, `#0d1117`, `#12141c` | One token system (see [Appendix](#appendix-forge-basalt-tokens)) |
-| B5 | Generic boilerplate copy | `MessageList.jsx`, `lib/data.js` ("Write a Netflix Clone", "Explain Redis"); Login ("Please login to continue") | Replace with real multi-agent engineering workflows |
-
----
-
-## C. Component UX deficiencies
-
-### C1. Nav header — `Nav.jsx`
-- **C1.1** Hardcoded `pl-12` mobile padding to dodge the floating sidebar button.
-- **C1.2** No active-agent indicator (Auto, Coding, Search, etc.).
-- **C1.3** No connection status, model name, or latency readout.
-- **C1.4** Title truncates abruptly with no tooltip.
-
-### C2. Sidebar — `SideBar.jsx` (567 lines)
-- **C2.1** Monolithic file mixing collapse, mobile drawer, editing, deletion, and auth. Split it.
-- **C2.2** No search or filter; finding past tasks requires endless scrolling.
-- **C2.3** Orphaned credits icon (line 529): `<Coins />` with no balance shown.
-- **C2.4** Title editing commits only on Enter or checkmark; blur leaves the input stuck or discards changes.
-- **C2.5** Accessibility: toggle lacks `aria-expanded`; no keyboard navigation between conversation items.
-
-### C3. Chat canvas — `ChatArea.jsx`, `MessageList.jsx`
-- **C3.1** Empty-state prompts read like tutorial exercises, not agent workflows (see B5).
-- **C3.2** User messages sit in colored cards, but assistant messages float unbordered with no container, agent label, or metadata.
-- **C3.3** No action toolbar: cannot copy a full response, retry, rate, or export to an artifact.
-
-### C4. Chat input — `ChatInput.jsx`
-- **C4.1** Seven agent chips wrap to 2–3 rows on narrow screens and push the input down.
-- **C4.2** Textarea has `rows={3}` fixed with hidden scrollbars, so users cannot gauge scroll position in long prompts.
-- **C4.3** Paperclip (attach) and Mic (voice) buttons have no handler, tooltip, or disabled state.
-
-### C5. Code blocks and artifacts — `MessageBubble.jsx`, `Articraft.jsx`
-- **C5.1** Filename typo: `Articraft.jsx` should be `ArtifactPanel.jsx` (imports in `Home.jsx` lines 3 and 10).
-- **C5.2** ~~Panel is hidden below `xl:` and shows a static placeholder.~~ **Resolved:** Removed the desktop vertical trigger rail from `Artifact.jsx`; the Nav.jsx Artifacts button now solely controls panel visibility.
-- **C5.3** Agent-generated artifacts never reach the panel, so it stays empty.
-- **C5.4** Code blocks lack a line-number toggle, show raw uppercase language tags, and `atomOneDark` clashes with the canvas colors.
-
-### C6. Login page — `LoginPage.jsx`
-- **C6.1** Bare 340px box on `fixed inset-0 z-50 bg-black/60 backdrop-blur-sm`.
-- **C6.2** No brand identity, product narrative, or feature highlights.
-- **C6.3** Google button uses a heavy indigo glow (`shadow-indigo-700/30`) on a white button.
-
-### C7. 404 page — `NotFound.jsx`
-- **C7.1** Template hallmarks: blur spheres, uppercase `404 NOT FOUND` badge, oversized gradient button (B1–B3).
-- **C7.2** No diagnostics such as an error code or the requested path.
+- [x] **B0. Rebrand Consistency:** Replaced legacy AgentForge branding across client metadata, header, sidebar, login, and agent prompts with Choreograph AI.
+- [ ] **B1. Heavy Gradients:** Indigo-violet gradients on sidebar, buttons, and bubbles; replace with crisp solid borders and state-driven accents.
+- [ ] **B2. Neon Blur Spheres:** Remove `bg-indigo-500/10 blur-2xl` decoration in `NotFound.jsx`.
+- [ ] **B3. Uppercase Eyebrow Labels:** Convert all-caps tags to sentence case.
+- [ ] **B4. Dark Theme Palette Fragmentation:** Standardize onto Forge Basalt design tokens.
+- [ ] **B5. Generic Boilerplate Copy:** Replace tutorial-style placeholders with real engineering agent tasks.
 
 ---
 
-## Remediation plan
+## C. Frontend UX Deficiencies
 
-### P0 — Bugs and bundle
-- [ ] A1 Fix ternary template literal
-- [ ] A2 Fix Tailwind shadow syntax
-- [ ] A4 Move prompt sync into `useEffect`
-- [ ] A5 Replace DOM `.remove()` with state fallback
-- [ ] A6 Fix truncation (`> 32` and `slice(0, 32)`)
-- [ ] A7 Use `===`
-- [ ] A8 Switch to Prism light build
-- [ ] C5.1 Rename `Articraft.jsx` to `ArtifactPanel.jsx` and update imports
-
-### P1 — Tokens and ergonomics
-- [ ] B4 Add Forge Basalt tokens to `src/index.css`; replace all hardcoded darks
-- [ ] A3 / B1 Remove gradients; use solid states with cyan focus borders
-- [ ] Add typographic scale with tabular numerals for metrics
-- [ ] C4.1 / C4.2 Agent selector as scroll bar or dropdown; auto-growing textarea (max 200px)
-- [ ] C3.2 / C3.3 Assistant cards with agent badge, model, timestamp, copy action
-- [ ] C2.2 / C2.3 Sidebar filter (`Ctrl+K`) and live credit balance
-- [ ] C1 Nav: active-agent pill and execution indicator; remove `pl-12` hack
-- [ ] C2.4 / C2.5 Commit title edits on blur; add ARIA and keyboard navigation
-
-### P2 — Secondary surfaces
-- [ ] C6 Two-column terminal-style login with product narrative
-- [ ] C7 404 as command-line diagnostic (`ERR_SESSION_NOT_FOUND`, path readout)
-- [ ] B5 / C3.1 Replace sample prompts in `src/lib/data.js`
-- [ ] C4.3 Implement or disable-with-tooltip the attach and mic buttons
-- [ ] C5.3 Pipe generated artifacts into the artifact panel
-- [ ] C2.1 Split `SideBar.jsx` into focused components
+- **C1. Nav Header:** Hardcoded mobile offsets; lacks active agent indicator, connection status, and model badges.
+- **C2. Sidebar:** Monolithic implementation (`SideBar.jsx`); needs modular split, chat history search/filter (`Ctrl+K`), and keyboard accessibility.
+- **C3. Chat Canvas:** Empty states need engineering prompts; assistant responses need standardized cards and action bars (copy/retry/export).
+- **C4. Chat Input:** Agent selector needs responsive horizontal scrolling/dropdown; textarea requires auto-grow; attachment and voice buttons need proper state handlers.
+- **C5. Artifacts:** Rename `Articraft.jsx` to `ArtifactPanel.jsx` (Imports clean); ensure dynamically generated artifacts pipe seamlessly into panel.
+- **C6. Login & Error Pages:** Revamp login to two-column terminal design; modernize 404 with diagnostic details (`ERR_SESSION_NOT_FOUND`).
 
 ---
 
-## Appendix: Forge Basalt tokens
+## D. Backend: Agent & Generation Services
+
+- [x] **D1. Presentation Deck Generation (PPT Agent):** Implemented `pptxgenjs` deck generation (`generate-ppt.js`) supporting cover slides, structured bullet cards, metric layouts, and conclusion summaries.
+- [x] **D2. S3 Asset Upload & Dynamic Presigned URLs:** Presigned URL expiry centralized via `URL_EXPIRY`; PDF and PPT agents upload buffers to S3 with correct MIME types and presigned download links.
+- [x] **D3. System Prompts & LLM Temperature Alignment:** Prompts updated for Choreograph AI; temperature set for creative formatting and structured JSON responses.
+- [ ] **D4. Agent Error Fallback & Resilience:** When LLM fails to return strict JSON in PPT/PDF agents, implement resilient regex parsing or schema repair before failing.
+- [ ] **D5. Streaming Agent Feedback:** PPT and PDF generation take 3-8s; provide intermediary status events (generating outline -> rendering -> uploading) over socket/SSE.
+- [ ] **D6. Temporary Asset Cleanup / Lifecycle:** Configure S3 lifecycle policy or bucket cleanup job for temporary generated download assets.
+
+---
+
+## E. Backend: Gateway & Routing
+
+- [x] **E1. Service Proxy Routing:** Added proxy route for `/api/v1/billing` in gateway.
+- [ ] **E2. Rate Limiting & Throttling:** Gateway needs per-user/IP rate limiting to protect agent LLM generation endpoints from abuse.
+- [ ] **E3. Centralized Request Tracing & Correlation IDs:** Attach `x-request-id` header in gateway and forward across auth, chat, billing, and agent microservices.
+
+---
+
+## F. Backend: Auth & Session Management
+
+- [ ] **F1. User Credits & Plan Schema Integration:** User model updated with plan tier (`free`, `starter`, `pro`), credit balance, and validity; controller and repo methods for payment update need completion and test verification.
+- [ ] **F2. Inter-Service Auth Token Verification:** Secure communication between Gateway, Billing service, and Auth service for balance updates.
+- [ ] **F3. Session Expiration & Invalidation:** Verify session cleanup across Redis and token invalidation on password/session reset.
+
+---
+
+## G. Backend: Billing & Payments Service
+
+- [ ] **G1. Incomplete Razorpay Integration:** `services/billing` contains initial Razorpay configuration, payment models, and routes that need end-to-end webhook verification.
+- [ ] **G2. Webhook Signature Verification:** Ensure Razorpay payment capture webhooks are cryptographically validated before incrementing user plan credits.
+- [ ] **G3. Idempotent Payment Processing:** Guarantee duplicate webhook deliveries do not credit user accounts multiple times.
+- [ ] **G4. Service Resilience & Fallback:** Handle failures when auth service is unreachable during post-payment credit provisioning.
+
+---
+
+## Appendix: Forge Basalt Tokens
 
 | Token | Value | Use |
 | :--- | :--- | :--- |
@@ -186,6 +141,7 @@ import { atomOneDark } from "react-syntax-highlighter/dist/cjs/styles/hljs";
 | `--text-primary` | `#F8FAFC` | Headings, core text |
 | `--text-secondary` | `#94A3B8` | Subheads, meta |
 | `--text-muted` | `#64748B` | Timestamps, hints |
+
 
 Semantic status colors: success `#10B981`, error `#F43F5E`.
 **Type:** Inter (UI, with `tnum`) and JetBrains Mono (code, token counts, IDs). Scale: 11 / 12 / 13 / 14 / 16 / 20 px.

@@ -51,7 +51,7 @@ export default function Login() {
         <div className="w-[340px] bg-[#13151c] border border-white/[0.08] rounded-2xl p-7 flex flex-col gap-5 shadow-2xl">
           <div className="flex flex-col gap-1 items-center justify-center text-center">
             <h2 className="text-[17px] font-semibold text-slate-100 tracking-tight">
-              Welcome to AgentForge
+              Welcome to Choreograph AI
             </h2>
 
             <p className="text-[13px] text-slate-500">

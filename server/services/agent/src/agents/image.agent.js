@@ -2,6 +2,7 @@ import axios from "axios";
 import getModel from "../config/llm.js";
 import getSystemPrompt from "../utils/system-prompt.js";
 import { getFromS3, uploadToS3 } from "../utils/s3.utils.js";
+import { URL_EXPIRY } from "../../../lib/constant.js";
 
 export async function imageAgent(state) {
   try {
@@ -26,8 +27,7 @@ export async function imageAgent(state) {
 
     await uploadToS3(fileName, buffer, "image/png");
 
-    const urlExpiresIn = 24 * 60; // minutes
-    const downloadUrl = await getFromS3(fileName, urlExpiresIn);
+    const downloadUrl = await getFromS3(fileName, URL_EXPIRY);
 
     return {
       ...state,
@@ -35,7 +35,7 @@ export async function imageAgent(state) {
 # Image Generated Successfully.
 ![Generated Image](${downloadUrl})
 [DownLoad Image](${downloadUrl})
-_Link will expire in 24 hours._
+_Link will expire in ${URL_EXPIRY / 60} hour(s)._
     `,
     };
   } catch (error) {

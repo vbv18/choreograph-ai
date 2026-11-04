@@ -22,10 +22,10 @@ export default function MessageList({ onSelectPrompt }) {
         <div className="h-full flex flex-col items-center justify-center gap-6 text-center select-none py-10">
           <div className="flex flex-col items-center gap-2 max-w-sm">
             <div className="w-10 h-10 rounded-xl bg-linear-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-sm font-bold shadow-md shadow-indigo-500/25 mb-1">
-              AF
+              CA
             </div>
             <h2 className="text-[20px] font-semibold text-slate-100 tracking-tight">
-              AgentForge
+              Choreograph AI
             </h2>
             <p className="text-[14px] font-medium text-slate-400">
               How can I help you today?

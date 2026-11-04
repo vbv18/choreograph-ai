@@ -2,6 +2,7 @@ import getModel from "../config/llm.js";
 import generatePDF from "../utils/generate-pdf.js";
 import getSystemPrompt from "../utils/system-prompt.js";
 import { uploadToS3, getFromS3 } from "../utils/s3.utils.js";
+import { URL_EXPIRY } from "../../../lib/constant.js";
 
 export async function pdfAgent(state) {
   try {
@@ -16,8 +17,7 @@ export async function pdfAgent(state) {
 
     await uploadToS3(fileName, pdfBuffer, "application/pdf");
 
-    const urlExpiresIn = 24 * 60; // minutes
-    const downloadUrl = await getFromS3(fileName, urlExpiresIn);
+    const downloadUrl = await getFromS3(fileName, URL_EXPIRY);
 
     return {
       ...state,
@@ -27,7 +27,7 @@ export async function pdfAgent(state) {
 **${data.title}**
 
 [DownLoad PDF](${downloadUrl})
-_Link will expire in 24 hours._
+_Link will expire in ${URL_EXPIRY / 60} hour(s)._
     `,
     };
   } catch (error) {
