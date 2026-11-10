@@ -18,9 +18,9 @@ export default async function authMiddleware(req, res, next) {
       });
     }
 
-    req.user = JSON.parse(session);
+    req.user = typeof session === "string" ? JSON.parse(session) : session;
 
-    next();
+    return next();
   } catch (error) {
     console.error("[Auth-Middleware Error]", error);
     return res.status(500).json({
