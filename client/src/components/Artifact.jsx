@@ -266,9 +266,9 @@ export default function Artifact() {
           </h3>
 
           <p className="text-xs text-slate-400 max-w-[320px] leading-relaxed mb-6">
-            When you ask Choreograph AI to generate code, multi-file applications,
-            or algorithms, your interactive code workspace and files will emerge
-            here.
+            When you ask Choreograph AI to generate code, multi-file
+            applications, or algorithms, your interactive code workspace and
+            files will emerge here.
           </p>
 
           <div className="w-full max-w-[320px] p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] text-left">

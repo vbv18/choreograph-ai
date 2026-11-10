@@ -37,7 +37,7 @@ export default function MessageBubble({
         className={`w-fit max-w-[92vw] md:max-w-[72%] px-4 py-2.5 rounded-2xl overflow-hidden leading-relaxed break-words
           ${
             isUser
-              ? "bg-gradient-to-br from-indigo-500 to-violet-700 text-white rounded-tr-sm"
+              ? "bg-linear-to-br from-indigo-500 to-violet-700 text-white rounded-tr-sm"
               : "text-slate-200 rounded-tl-sm"
           }`}
       >
@@ -128,7 +128,7 @@ export default function MessageBubble({
                       onClick={() => handleCopyButton(value)}
                       className="flex items-center gap-1 text-xs"
                     >
-                      {copiedCode == value ? (
+                      {copiedCode === value ? (
                         <>
                           <Check size={14} />
                           Copied
@@ -167,7 +167,7 @@ export default function MessageBubble({
                   src={src}
                   loading="lazy"
                   onError={(e) => e.currentTarget.remove()}
-                  onClick={() => setLightBox(img)}
+                  onClick={() => setLightBox(src)}
                   className="w-84 h-64 rounded-xl object-cover border border-white/10 cursor-zoom-in hover:opacity-90 transition"
                 />
               );

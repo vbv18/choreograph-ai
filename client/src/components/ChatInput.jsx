@@ -12,7 +12,7 @@ import {
   ImageIcon,
   Search,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import sendMessage from "../features/sendMessage.js";
 import createConversation from "../features/createConversation.js";
 import editConversation from "../features/editConversation.js";
@@ -28,16 +28,24 @@ export default function ChatInput({ initialPrompt, onResetPrompt }) {
   const [value, setValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [prevInitialPrompt, setPrevInitialPrompt] = useState(initialPrompt);
   const dispatch = useDispatch();
   const { selectedConversation } = useSelector((state) => state.conversation);
   const [selectedAgent, setSelectedAgent] = useState("auto");
+  const lastConsumedPrompt = useRef(null);
 
-  if (initialPrompt && initialPrompt !== prevInitialPrompt) {
-    setPrevInitialPrompt(initialPrompt);
+  useEffect(() => {
+    if (!initialPrompt) {
+      lastConsumedPrompt.current = null;
+      return;
+    }
+
+    if (lastConsumedPrompt.current === initialPrompt) return;
+
+    lastConsumedPrompt.current = initialPrompt;
+
     setValue(initialPrompt);
     onResetPrompt?.();
-  }
+  }, [initialPrompt, onResetPrompt]);
 
   async function handleSendMessage() {
     const prompt = value.trim();
@@ -64,7 +72,7 @@ export default function ChatInput({ initialPrompt, onResetPrompt }) {
 
       if (currentConv && currentConv.title === "New Chat") {
         const truncatedTitle =
-          prompt.length > 20 ? prompt.slice(0, 40) + "..." : prompt;
+          prompt.length > 20 ? prompt.slice(0, 20) + "..." : prompt;
         await editConversation(currentConv._id, truncatedTitle);
         dispatch(
           setConversationTitle({
@@ -191,7 +199,7 @@ export default function ChatInput({ initialPrompt, onResetPrompt }) {
                 className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium border transition-all cursor-pointer
                 ${
                   isActive
-                    ? "bg-gradient-to-r from-indigo-500 to-violet-600 text-white border-transparent shadow-[0_1px_8px_rgba(99, 102, 241, .35)]"
+                    ? "bg-linear-to-r from-indigo-500 to-violet-600 text-white border-transparent shadow-[0_1px_8px_rgba(99,102,241,.35)]"
                     : "bg-white/[0.03] text-slate-400 border-white/[0.06] hover:bg-white/[0.07]"
                 }
               `}
