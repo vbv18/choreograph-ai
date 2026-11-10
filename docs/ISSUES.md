@@ -1,7 +1,7 @@
 # Choreograph AI — Technical Audit & Issue Register
 
 **Audit date:** October–November 2026  
-**Scope:** Frontend (`/client`), Backend services (`/server/gateway`, `/server/services/*`), and Cross-cutting architecture  
+**Scope:** Frontend (`/client`), Backend services (`/server/gateway`, `/server/services/`*), and Cross-cutting architecture  
 **Product:** Autonomous AI agent orchestration workbench (Coding, Search, PPT, PDF, Image, Auto agents)
 
 ---
@@ -23,46 +23,57 @@
 ## A. Frontend Code Bugs
 
 ### A1. Ternary trapped inside template literal — `ChatInput.jsx:189–194`
+
 ```jsx
 className={`
   isActive ? "text-white" : "text-slate-500"
 `}
 ```
+
 **Problem:** Missing `${}`. The browser receives literal text as class names, so active agent icon color does not toggle.  
-**Fix:** `` className={`${isActive ? "text-white" : "text-slate-500"}`} ``
+**Fix:** `className={`${isActive ? "text-white" : "text-slate-500"}`}`
 
 ### A2. Invalid Tailwind arbitrary value — `ChatInput.jsx:181`
+
 ```jsx
 shadow-[0_1px_8px_rgba(99, 102, 241, .35)]
 ```
+
 **Problem:** Spaces in arbitrary brackets break Tailwind CSS parser.  
 **Fix:** `shadow-[0_1px_8px_rgba(99,102,241,0.35)]`
 
 ### A3. Mixed Tailwind v3 and v4 gradient syntax
+
 - v3 `bg-gradient-to-r/br` (`ChatInput.jsx:181`, `MessageBubble.jsx:28`)
 - v4 `bg-linear-to-r/br` (`SideBar.jsx:279`, `MessageList.jsx:24`, `NotFound.jsx:42`)  
 **Fix:** Standardize and migrate to solid states with cyan focus borders.
 
 ### A4. State updates during render — `ChatInput.jsx:36–40`
+
 **Problem:** Direct state updater in component render body causing React lifecycle warnings.  
 **Fix:** Wrap inside `useEffect` keyed on `initialPrompt`.
 
 ### A5. Direct DOM mutation — `MessageBubble.jsx:39`
+
 ```jsx
 onError={(e) => e.currentTarget.remove()}
 ```
+
 **Problem:** Direct DOM removal bypasses React reconciliation.  
 **Fix:** Maintain image error status in state and render fallback.
 
 ### A6. Title truncation mismatch — `ChatInput.jsx:66–68`
+
 **Problem:** Prompt condition checks `> 20` but slices `(0, 40) + "..."`.  
 **Fix:** Standardize truncation threshold (e.g., `prompt.length > 32 ? prompt.slice(0, 32) + "..." : prompt`).
 
 ### A7. Loose equality — `MessageBubble.jsx:119`
+
 **Problem:** `copiedCode == value` uses loose equality.  
 **Fix:** Replace with strict equality `===`.
 
 ### A8. Monolithic syntax highlighter import — `MessageBubble.jsx:6`
+
 **Problem:** Full package import bloats bundle over 1.6MB.  
 **Fix:** Switch to `prism-light` and register targeted languages only.
 
@@ -141,7 +152,6 @@ onError={(e) => e.currentTarget.remove()}
 | `--text-primary` | `#F8FAFC` | Headings, core text |
 | `--text-secondary` | `#94A3B8` | Subheads, meta |
 | `--text-muted` | `#64748B` | Timestamps, hints |
-
 
 Semantic status colors: success `#10B981`, error `#F43F5E`.
 **Type:** Inter (UI, with `tnum`) and JetBrains Mono (code, token counts, IDs). Scale: 11 / 12 / 13 / 14 / 16 / 20 px.
