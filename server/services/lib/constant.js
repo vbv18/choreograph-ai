@@ -45,4 +45,4 @@ export const PLANS = {
     credits: 1000,
     validity: 30, // in days
   },
-}
+};
