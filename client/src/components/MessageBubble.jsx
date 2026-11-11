@@ -11,6 +11,8 @@ import {
   setActiveArtifactIndex,
   setArtifactOpen,
 } from "../redux/messageSlice.js";
+import { isSafeUrl, sanitizeImageUrl } from "../utils/url.js";
+import { copyToClipboard } from "../utils/clipboard.js";
 
 export default function MessageBubble({
   role,
@@ -22,37 +24,66 @@ export default function MessageBubble({
   const isUser = role === "user";
   const [lightBox, setLightBox] = useState(null);
   const [copiedCode, setCopiedCode] = useState("");
+  const [failedImages, setFailedImages] = useState(() => new Set());
 
   async function handleCopyButton(code) {
-    await navigator.clipboard.writeText(code);
-    setCopiedCode(code);
-    setTimeout(() => {
-      setCopiedCode("");
-    }, 2000);
+    try {
+      await copyToClipboard(code);
+      setCopiedCode(code);
+
+      setTimeout(() => {
+        setCopiedCode("");
+      }, 2000);
+    } catch {
+      // Display an error toast or other user feedback.
+    }
+  }
+
+  function handleImageError(src) {
+    setFailedImages((prev) => {
+      const next = new Set(prev);
+      next.add(src);
+      return next;
+    });
   }
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
         className={`w-fit max-w-[92vw] md:max-w-[72%] px-4 py-2.5 rounded-2xl overflow-hidden leading-relaxed break-words
-          ${
-            isUser
-              ? "bg-linear-to-br from-indigo-500 to-violet-700 text-white rounded-tr-sm"
-              : "text-slate-200 rounded-tl-sm"
+          ${isUser
+            ? "bg-linear-to-br from-indigo-500 to-violet-700 text-white rounded-tr-sm"
+            : "text-slate-200 rounded-tl-sm"
           }`}
       >
+
         {images.length > 0 && (
           <div className="flex flex-wrap gap-3 mt-4">
-            {images.map((img, index) => (
-              <img
-                key={index}
-                src={img}
-                loading="lazy"
-                onError={(e) => e.currentTarget.remove()}
-                onClick={() => setLightBox(img)}
-                className="w-40 h-28 rounded-xl object-cover border border-white/10 cursor-zoom-in hover:opacity-90 transition"
-              />
-            ))}
+            {images.map((img, index) => {
+              const safeSrc = sanitizeImageUrl(img);
+
+              if (!safeSrc) return null;
+
+              return failedImages.has(safeSrc) ? (
+                <div
+                  key={`${safeSrc}-${index}`}
+                  className="w-40 h-28 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-xs text-gray-400"
+                >
+                  Image unavailable
+                </div>
+              ) : (
+                <img
+                  key={`${safeSrc}-${index}`}
+                  src={safeSrc}
+                  alt={`Generated image ${index + 1}`}
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  onError={() => handleImageError(safeSrc)}
+                  onClick={() => setLightBox(safeSrc)}
+                  className="w-40 h-28 rounded-xl object-cover border border-white/10 cursor-zoom-in hover:opacity-90 transition"
+                />
+              );
+            })}
           </div>
         )}
 
@@ -94,17 +125,23 @@ export default function MessageBubble({
                 {children}
               </td>
             ),
-            a: ({ href, children }) => (
-              <a
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                className="text-indigo-400 underline inline-flex items-center gap-1"
-              >
-                {children}
-                <ExternalLink size={14} />
-              </a>
-            ),
+            a: ({ href, children }) => {
+              const safe = isSafeUrl(href);
+
+              if (!safe) return <span>{children}</span>
+
+              return (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-400 underline inline-flex items-center gap-1"
+                >
+                  {children}
+                  <ExternalLink size={14} />
+                </a>
+              );
+            },
             code: ({ className, children }) => {
               const value = String(children).trim();
 
@@ -159,16 +196,23 @@ export default function MessageBubble({
                 </div>
               );
             },
-            img: ({ src }) => {
-              if (!src) return null;
+            img: ({ src, alt }) => {
+              const safeSrc = sanitizeImageUrl(src);
 
-              return (
+              if (!safeSrc) return null;
+
+              return failedImages.has(safeSrc) ? (
+                <span className="text-xs text-gray-400">
+                  Image unavailable
+                </span>
+              ) : (
                 <img
-                  src={src}
+                  src={safeSrc}
+                  alt={alt || ""}
                   loading="lazy"
-                  onError={(e) => e.currentTarget.remove()}
-                  onClick={() => setLightBox(src)}
-                  className="w-84 h-64 rounded-xl object-cover border border-white/10 cursor-zoom-in hover:opacity-90 transition"
+                  onError={() => handleImageError(safeSrc)}
+                  referrerPolicy="no-referrer"
+                  className="max-w-full rounded-xl"
                 />
               );
             },

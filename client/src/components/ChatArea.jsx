@@ -20,9 +20,13 @@ export default function ChatArea() {
         if (isCurrent) {
           dispatch(setMessages(data || []));
 
-          const latestArtifactMessage = [...data]
-            .reverse()
-            .find((msg) => msg.artifacts && msg.artifacts.length > 0);
+          let latestArtifactMessage;
+
+          if (data) {
+            latestArtifactMessage = [...data]
+              .reverse()
+              .find((msg) => msg.artifacts && msg.artifacts.length > 0);
+          }
           dispatch(setArtifacts(latestArtifactMessage?.artifacts || []));
         }
       } else {
