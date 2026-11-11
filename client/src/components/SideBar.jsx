@@ -29,6 +29,8 @@ import {
   setConversationTitle,
 } from "../redux/conversationSlice.js";
 import { setUserData } from "../redux/userSlice.js";
+import BillingModal from "./BillingModal.jsx";
+import { PLANS } from "../lib/data.js";
 
 export default function SideBar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -39,6 +41,8 @@ export default function SideBar() {
   const [editingTitle, setEditingTitle] = useState("");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [deletingConvId, setDeletingConvId] = useState(null);
+  const [showBilling, setShowBilling] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const dispatch = useDispatch();
   const { conversations, selectedConversation } = useSelector(
@@ -50,6 +54,9 @@ export default function SideBar() {
     ? conversations.filter(Boolean)
     : [];
 
+  const plan = PLANS[userData?.planId] ?? PLANS["free"];
+  const credits = userData?.credits ?? plan.credits;
+
   useEffect(() => {
     let isMounted = true;
     async function fetchConversations() {
@@ -59,8 +66,14 @@ export default function SideBar() {
           dispatch(setConversations(Array.isArray(data) ? data : []));
         }
       } catch {
-        if (isMounted) {
-          dispatch(setConversations([]));
+        // Retry
+        try {
+          const data = await getConversations();
+          if (isMounted && data) {
+            dispatch(setConversations(Array.isArray(data) ? data : []));
+          }
+        } catch (error) {
+          console.error("[Fetch-Conversations-Error]", error);
         }
       }
     }
@@ -157,12 +170,18 @@ export default function SideBar() {
   }
 
   async function handleLogOut() {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+
     try {
       await logout();
-    } catch {
-      // Fail gracefully on logout
-    } finally {
       dispatch(setUserData(null));
+    } catch (error) {
+      console.error("[Logout Error]", error);
+      alert("LogOut Failed! Try again later.");
+    } finally {
+      setIsLoggingOut(false);
     }
   }
 
@@ -516,27 +535,69 @@ export default function SideBar() {
                   <p className="text-[13px] font-medium text-slate-200 truncate leading-tight">
                     {userData?.name || "User"}
                   </p>
-                  <p className="text-[11px] text-slate-500 truncate mt-0.5">
-                    {userData?.email || userData?.plan || "Free"}
+                  <p className="text-[11px] text-slate-500 truncate mt-0.5 flex justify-between">
+                    <span>{plan.name || "Free"}</span>
                   </p>
                 </div>
 
-                <div className="flex items-center gap-0.5 shrink-0">
-                  <div
-                    title="Agent compute credits"
-                    className="flex items-center gap-1 px-1.5 py-1 rounded-md text-amber-400/90 hover:bg-amber-400/10 transition-colors text-[11px] font-mono cursor-default"
+                <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
+                  {/* Credits / Billing */}
+                  <button
+                    type="button"
+                    onClick={() => setShowBilling(true)}
+                    title="View usage & billing"
+                    aria-label={`View usage and billing. ${userData?.credits ?? 0} credits remaining`}
+                    className="
+                      flex h-8 shrink-0 items-center justify-center gap-1.5
+                      rounded-lg border border-amber-400/15
+                      bg-amber-400/5 px-2
+                      text-amber-400
+                      transition-colors duration-200
+                      hover:border-amber-400/30
+                      hover:bg-amber-400/10
+                      hover:text-amber-300
+                      active:scale-95
+                      focus-visible:outline-none
+                      focus-visible:ring-2
+                      focus-visible:ring-amber-400/50 cursor-pointer
+                    "
                   >
-                    <Coins size={13} />
-                  </div>
+                    <Coins size={14} className="shrink-0" />
 
+                    <span className="text-[11px] font-mono font-medium tabular-nums">
+                      {credits}
+                    </span>
+                  </button>
+
+                  {/* Divider */}
+                  <div className="h-4 w-px shrink-0 bg-slate-700/70" />
+
+                  {/* Logout */}
                   <button
                     type="button"
                     onClick={handleLogOut}
-                    title="Log out"
+                    disabled={isLoggingOut}
+                    title={isLoggingOut ? "Logging out..." : "Log out"}
                     aria-label="Log out"
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-500/40"
+                    className="
+                      flex h-8 w-8 shrink-0 items-center justify-center
+                      rounded-lg text-slate-400
+                      transition-colors duration-200
+                      hover:bg-rose-500/10
+                      hover:text-rose-400
+                      active:scale-95
+                      focus-visible:outline-none
+                      focus-visible:ring-2
+                      focus-visible:ring-rose-500/40
+                      disabled:cursor-not-allowed
+                      disabled:opacity-50 cursor-pointer
+                    "
                   >
-                    <LogOut size={15} />
+                    {isLoggingOut ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : (
+                      <LogOut size={15} />
+                    )}
                   </button>
                 </div>
               </div>
@@ -562,6 +623,8 @@ export default function SideBar() {
           )}
         </div>
       </aside>
+
+      <BillingModal open={showBilling} onClose={() => setShowBilling(false)} />
     </>
   );
 }

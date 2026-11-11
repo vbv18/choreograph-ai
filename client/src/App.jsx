@@ -24,7 +24,9 @@ export default function App() {
       } catch (error) {
         console.error("[Get-Current-User-Error]", error);
 
-        dispatch(setUserData(null));
+        if (error.response?.status === 401) {
+          dispatch(setUserData(null));
+        }
       } finally {
         setLoading(false);
       }
