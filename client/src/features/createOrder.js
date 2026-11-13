@@ -9,7 +9,11 @@ export default async function createOrder(payload) {
       plan: response.data?.plan,
     };
   } catch (error) {
-    console.error("[Create-Order Error]", error);
+    console.error("[Create-Order Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
     throw error;
   }
 }

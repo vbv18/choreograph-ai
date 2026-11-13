@@ -6,7 +6,11 @@ export default async function sendMessage(payload) {
     console.log(response.data);
     return response.data;
   } catch (error) {
-    console.error("[Send-Message Error]", error);
+    console.error("[Send-Message Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
     throw error;
   }
 }

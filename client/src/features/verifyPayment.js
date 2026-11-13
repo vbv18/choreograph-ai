@@ -9,7 +9,11 @@ export default async function verifyPayment(payload) {
       plan: response.data?.plan,
     };
   } catch (error) {
-    console.error("[Verify-Payment Error]", error);
+    console.error("[Verify-Payment Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
 
     throw error;
   }
