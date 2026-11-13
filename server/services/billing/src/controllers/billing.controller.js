@@ -29,7 +29,12 @@ export async function createOrder(req, res) {
       plan,
     });
   } catch (error) {
-    console.error("[Create-Order Error]", error);
+    console.error("[Create-Order Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
+
     return res.status(500).json({
       message: "Internal server error",
     });
@@ -42,7 +47,9 @@ export async function verifyPayment(req, res) {
       req.body;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      console.error("[Verify-Payment Error]: Missing payment verification details");
+      console.error(
+        "[Verify-Payment Error]: Missing payment verification details",
+      );
       return res.status(400).json({
         message: "Missing payment verification details",
       });
@@ -67,7 +74,7 @@ export async function verifyPayment(req, res) {
     );
 
     if (!payment) {
-      console.log("[Verify-Payment Error]: Payment not found")
+      console.log("[Verify-Payment Error]: Payment not found");
       return res.status(404).json({
         message: "Payment not found",
       });
@@ -83,7 +90,12 @@ export async function verifyPayment(req, res) {
       message: "Payment verified",
     });
   } catch (error) {
-    console.error("[Verify-Payment Error]", error);
+    console.error("[Verify-Payment Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
+
     return res.status(500).json({
       message: "Internal server error",
     });

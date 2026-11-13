@@ -21,7 +21,7 @@ export async function setSession(userId, sessionId, user) {
     redis.set(
       `user-session-${userId}`,
       JSON.stringify({
-        sessionId,
+        sessionId: sessionId,
       }),
     ),
   ]);
@@ -32,5 +32,11 @@ export async function deleteSession(sessionId) {
 }
 
 export async function getSessionByUserId(userId) {
-  return await redis.get(`user-session-${userId}`);
+  const rawSessionData = await redis.get(`user-session-${userId}`);
+
+  if (!rawSessionData) return null;
+
+  const sessionData = JSON.parse(rawSessionData);
+
+  return sessionData?.sessionId || null;
 }
