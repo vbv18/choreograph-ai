@@ -106,7 +106,9 @@ export async function updateUserPayment(req, res) {
       });
     }
 
-    const sessionId = await getSessionByUserId(user._id);
+    const rawSessionData = await getSessionByUserId(user._id);
+    const sessionData = rawSessionData ? JSON.parse(rawSessionData) : null;
+    const sessionId = sessionData?.sessionId;
 
     await setSession(user._id, sessionId, user);
 

@@ -10,7 +10,7 @@ export async function setSession(userId, sessionId, user) {
         name: user.name,
         email: user.email,
         avatar: user.avatar,
-        plan: user.plan,
+        planId: user.planId,
         credits: user.credits,
         totalCredits: user.totalCredits,
         planExpiresAt: user.planExpiresAt,

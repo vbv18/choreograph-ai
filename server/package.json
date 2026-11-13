@@ -10,7 +10,8 @@
     "dev:auth": "npm --prefix services/auth run dev",
     "dev:chat": "npm --prefix services/chat run dev",
     "dev:agent": "npm --prefix services/agent run dev",
-    "dev": "concurrently -n \"gateway,auth,chat,agent\" -c \"blue,green,yellow,magenta\" \"npm run dev:gateway\" \"npm run dev:auth\" \"npm run dev:chat\" \"npm run dev:agent\""
+    "dev:billing": "npm --prefix services/billing run dev",
+    "dev": "concurrently -n \"gateway,auth,chat,agent,billing\" -c \"blue,green,yellow,magenta,indigo\" \"npm run dev:gateway\" \"npm run dev:auth\" \"npm run dev:chat\" \"npm run dev:agent\" \"npm run dev:billing\""
   },
   "keywords": [],
   "author": "",
