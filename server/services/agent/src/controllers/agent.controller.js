@@ -1,26 +1,38 @@
 import axios from "axios";
 import graph from "../graph/graph.js";
 import { updateMemoryBatch } from "../config/memory.js";
+import deductCredits from "../utils/deductCredits.js";
+import { router } from "../graph/router.js";
 
 export async function agent(req, res) {
   let result;
 
+  const { prompt, conversationId, agent } = req.body;
+
+  const userId = req.headers["x-user-id"];
+  const chatServiceUrl = process.env.CHAT_SERVICE_URL;
+
+  let selectedAgent;
+
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: "Authentication required",
+    });
+  }
+
+  if (!prompt?.trim() || !conversationId?.trim() || !agent?.trim()) {
+    return res.status(400).json({
+      message: "prompt, conversationId, and agent are required",
+    });
+  }
+
+  if (!chatServiceUrl) {
+    throw new Error("CHAT_SERVICE_URL is not configured");
+  }
+
   try {
-    const { prompt, conversationId, agent } = req.body;
-    const userId = req.headers["x-user-id"];
-    const chatServiceUrl = process.env.CHAT_SERVICE_URL;
-
-    if (!prompt?.trim() || !conversationId?.trim() || !agent?.trim()) {
-      return res.status(400).json({
-        message: "prompt, conversationId, and agent are required",
-      });
-    }
-
-    if (!chatServiceUrl) {
-      throw new Error("CHAT_SERVICE_URL is not configured");
-    }
-
-    const requestHeaders = userId ? { "x-user-id": userId } : {};
+    const requestHeaders = { "x-user-id": userId };
 
     // 1. Persist user message.
     await axios.post(
@@ -30,14 +42,28 @@ export async function agent(req, res) {
         role: "user",
         content: prompt,
       },
-      { headers: requestHeaders, timeout: 10000 },
+      {
+        headers: requestHeaders,
+        timeout: 10000,
+      },
     );
+
+    // Routing to agent
+    if (agent === "auto") {
+      const routedState = await router({
+        prompt,
+        agent,
+        conversationId,
+      });
+
+      selectedAgent = routedState.agent;
+    }
 
     // 2. Generate the response.
     result = await graph.invoke({
       prompt,
       conversationId,
-      agent,
+      agent: selectedAgent,
     });
 
     const rawResponse =
@@ -52,6 +78,14 @@ export async function agent(req, res) {
         ? [result.artifact]
         : [];
 
+    // Deduct Credits
+    const creditResult = await deductCredits(
+      userId,
+      selectedAgent,
+      prompt,
+      result,
+    );
+
     // 3. Persist assistant message.
     await axios.post(
       `${chatServiceUrl}/messages/`,
@@ -63,7 +97,10 @@ export async function agent(req, res) {
         artifacts,
         artifact: artifacts,
       },
-      { headers: requestHeaders, timeout: 10000 },
+      {
+        headers: requestHeaders,
+        timeout: 10000,
+      },
     );
 
     // 4. Update Redis once, after persistence succeeds.
@@ -82,17 +119,24 @@ export async function agent(req, res) {
       images: result?.images || [],
       artifacts,
       artifact: artifacts,
+      credits: creditResult.credits,
     });
   } catch (error) {
-    const errorDetails = error?.response?.data || error?.message || error;
-    console.error("[Agent-Error]", errorDetails);
+    console.error("[Agent-Controller Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
+
+    const statusCode = error?.response?.status || 500;
 
     const clientMessage =
       error?.response?.data?.message ||
       error?.message ||
       "Internal Server Error";
 
-    return res.status(500).json({
+    return res.status(statusCode).json({
+      status: false,
       message: clientMessage,
     });
   }

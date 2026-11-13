@@ -47,7 +47,12 @@ export async function chatAgent(state) {
       aiResponse,
     };
   } catch (error) {
-    console.warn("[Chat-Agent Error]", error);
+    console.error("[Chat-Agent Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
+
     return {
       ...state,
       aiResponse: "Failed to generate response!",

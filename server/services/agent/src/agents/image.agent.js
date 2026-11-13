@@ -39,7 +39,11 @@ _Link will expire in ${URL_EXPIRY / 60} hour(s)._
     `,
     };
   } catch (error) {
-    console.warn("[Image-Agent Error]", error);
+    console.error("[Image-Agent Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
     return {
       ...state,
       aiResponse: "Failed to generate image!",

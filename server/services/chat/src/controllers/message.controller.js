@@ -32,7 +32,11 @@ export async function saveMessage(req, res) {
       message: "Message saved successfully",
     });
   } catch (error) {
-    console.error("[Save-Message-Error]", error);
+    console.error("[Save-Message-Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
 
     return res.status(500).json({
       message: "Internal server error",
@@ -67,7 +71,11 @@ export async function getMessages(req, res) {
       messages,
     });
   } catch (error) {
-    console.error("[Get-Messages-Error]", error);
+    console.error("[Get-Messages-Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
 
     return res.status(500).json({
       message: "Internal server error",

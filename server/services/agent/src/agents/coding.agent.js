@@ -46,8 +46,12 @@ export async function codingAgent(state) {
     if (rawIntent) {
       intent = rawIntent;
     }
-  } catch (err) {
-    console.warn("[CodingAgent] Intent classification warning:", err.message);
+  } catch (error) {
+    console.warn("[CodingAgent] Intent classification warning:", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
   }
 
   if (intent === "CODE_GENERATION") {
@@ -61,7 +65,11 @@ export async function codingAgent(state) {
       data = extractJson(response?.content || "");
       console.log(data);
     } catch (error) {
-      console.warn("[Code-Generate-Agent Error] LLM failed", error.message);
+      console.warn("[Code-Generate-Agent Error] LLM failed", {
+        status: error.response?.status,
+        message: error.message,
+        data: error.response?.data,
+      });
     }
 
     if (data) {
@@ -113,7 +121,11 @@ export async function codingAgent(state) {
     try {
       response = await llm.invoke(messages);
     } catch (error) {
-      console.warn("[Code-Review-Agent Error] LLM failed", error.message);
+      console.warn("[Code-Review-Agent Error] LLM failed", {
+        status: error.response?.status,
+        message: error.message,
+        data: error.response?.data,
+      });
     }
 
     const aiResponse =

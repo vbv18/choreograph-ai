@@ -11,7 +11,11 @@ export async function createConversation(req, res) {
       conversation,
     });
   } catch (error) {
-    console.error("[Create-Conversation-Error]", error);
+    console.error("[Create-Conversation-Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
 
     return res.status(500).json({
       message: "Internal server error",
@@ -29,7 +33,11 @@ export async function getConversations(req, res) {
       conversations,
     });
   } catch (error) {
-    console.error("[Get-Conversations-Error]", error);
+    console.error("[Get-Conversations-Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
 
     return res.status(500).json({
       message: "Internal server error",
@@ -72,7 +80,11 @@ export async function editConversation(req, res) {
       conversation,
     });
   } catch (error) {
-    console.error("[Edit-Conversation-Error]", error);
+    console.error("[Edit-Conversation-Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
 
     return res.status(500).json({
       message: "Internal server error",
@@ -107,7 +119,11 @@ export async function deleteConversation(req, res) {
       conversationId,
     });
   } catch (error) {
-    console.error("[Delete-Conversation-Error]", error);
+    console.error("[Delete-Conversation-Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
 
     return res.status(500).json({
       message: "Internal server error",

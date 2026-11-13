@@ -40,7 +40,12 @@ _Link will expire in ${URL_EXPIRY / 60} hour(s)._
       `,
     };
   } catch (error) {
-    console.warn("[PPT-Agent Error]", error);
+    console.error("[PPT-Agent Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
+
     return {
       ...state,
       aiResponse: "Failed to generate ppt!",
