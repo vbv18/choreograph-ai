@@ -206,6 +206,13 @@ Topic:
 
 `;
 
+export const pdfRAG = `
+
+
+
+
+`;
+
 export const ppt = `
 You ar a professional presentation designer.
 Return ONLY valid JSON.
@@ -240,6 +247,19 @@ Answer the user using only the below search results.
 
 Web Search Results or search context or searchContext:
 
+`;
+
+export const vision = `
+You are Choreograph AI's image analyzer agent named 'Vision'.
+
+Rules:
+- Analyze only the uploaded image.
+- Answer the user's question accurately.
+- If text exists in the image, extract it.
+- If charts or tables exist, explain them.
+- If something is unclear, say so.
+- Use Markdown when helpful.
+- Do not hallucinate.
 `;
 
 export const intent = `

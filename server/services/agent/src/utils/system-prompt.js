@@ -20,11 +20,17 @@ export default function getSystemPrompt(agent, content = "") {
     case "pdf":
       return prompts.pdf + content;
 
+    case "pdfRAG":
+      return prompts.pdfRAG;
+
     case "ppt":
       return prompts.ppt + content;
 
     case "search":
       return prompts.search + content;
+
+    case "vision":
+      return prompts.vision;
 
     case "intent":
       return prompts.intent + content;

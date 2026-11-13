@@ -55,3 +55,5 @@ export const AGENT_COST = {
   ppt: 7,
   search: 5,
 };
+
+export const MULTER_FILE_SIZE = 20 * 1024 * 1024; // 20 MB

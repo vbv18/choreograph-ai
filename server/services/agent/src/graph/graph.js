@@ -10,8 +10,10 @@ workflow.addNode("chat", agents.chatAgent);
 workflow.addNode("coding", agents.codingAgent);
 workflow.addNode("image", agents.imageAgent);
 workflow.addNode("pdf", agents.pdfAgent);
+workflow.addNode("pdfRAG", agents.pdfRAG);
 workflow.addNode("ppt", agents.pptAgent);
 workflow.addNode("search", agents.searchAgent);
+workflow.addNode("vision", agents.visionAgent);
 
 workflow.addEdge("__start__", "router");
 workflow.addConditionalEdges(
@@ -26,10 +28,14 @@ workflow.addConditionalEdges(
         return "image";
       case "pdf":
         return "pdf";
+      case "pdfRAG":
+        return "pdfRAG";
       case "ppt":
         return "ppt";
       case "search":
         return "search";
+      case "vision":
+        return "vision";
 
       default:
         return "chat";
@@ -40,12 +46,16 @@ workflow.addConditionalEdges(
     coding: "coding",
     image: "image",
     pdf: "pdf",
+    pdfRAG: "pdfRAG",
     ppt: "ppt",
     search: "search",
+    vision: "vision",
   },
 );
 
+workflow.addEdge("pdfRAG", "chat");
 workflow.addEdge("search", "chat");
+workflow.addEdge("vision", "chat");
 
 workflow.addEdge("chat", "__end__");
 workflow.addEdge("coding", "__end__");
