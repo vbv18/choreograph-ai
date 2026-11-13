@@ -17,7 +17,13 @@ export async function searchAgent(state) {
       searchResults: results,
       images: results.images,
     };
-  } catch {
+  } catch (error) {
+    console.error("[Search-Agent Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
+
     return {
       ...state,
       searchResults: [],

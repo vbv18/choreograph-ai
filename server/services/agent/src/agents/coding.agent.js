@@ -1,5 +1,5 @@
 import getSystemPrompt from "../utils/system-prompt.js";
-import getModel from "../config/llm.js";
+import getModel from "../utils/getModel.js";
 import { getMemory } from "../config/memory.js";
 import {
   AIMessage,
@@ -47,7 +47,7 @@ export async function codingAgent(state) {
       intent = rawIntent;
     }
   } catch (error) {
-    console.warn("[CodingAgent] Intent classification warning:", {
+    console.error("[CodingAgent] Intent classification warning:", {
       status: error.response?.status,
       message: error.message,
       data: error.response?.data,
@@ -65,7 +65,7 @@ export async function codingAgent(state) {
       data = extractJson(response?.content || "");
       console.log(data);
     } catch (error) {
-      console.warn("[Code-Generate-Agent Error] LLM failed", {
+      console.error("[Code-Generate-Agent Error] LLM failed", {
         status: error.response?.status,
         message: error.message,
         data: error.response?.data,
@@ -121,7 +121,7 @@ export async function codingAgent(state) {
     try {
       response = await llm.invoke(messages);
     } catch (error) {
-      console.warn("[Code-Review-Agent Error] LLM failed", {
+      console.error("[Code-Review-Agent Error] LLM failed", {
         status: error.response?.status,
         message: error.message,
         data: error.response?.data,

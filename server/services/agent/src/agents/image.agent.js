@@ -1,5 +1,5 @@
 import axios from "axios";
-import getModel from "../config/llm.js";
+import getModel from "../utils/getModel.js";
 import getSystemPrompt from "../utils/system-prompt.js";
 import { getFromS3, uploadToS3 } from "../utils/s3.utils.js";
 import { URL_EXPIRY } from "../../../lib/constant.js";
@@ -44,6 +44,7 @@ _Link will expire in ${URL_EXPIRY / 60} hour(s)._
       message: error.message,
       data: error.response?.data,
     });
+
     return {
       ...state,
       aiResponse: "Failed to generate image!",

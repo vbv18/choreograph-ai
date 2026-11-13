@@ -1,4 +1,4 @@
-import getModel from "../config/llm.js";
+import getModel from "../utils/getModel.js";
 import generatePDF from "../utils/generate-pdf.js";
 import getSystemPrompt from "../utils/system-prompt.js";
 import { uploadToS3, getFromS3 } from "../utils/s3.utils.js";
@@ -31,11 +31,12 @@ _Link will expire in ${URL_EXPIRY / 60} hour(s)._
     `,
     };
   } catch (error) {
-    console.error("[Image-Agent Error]", {
+    console.error("[PDF-Agent Error]", {
       status: error.response?.status,
       message: error.message,
       data: error.response?.data,
     });
+
     return {
       ...state,
       aiResponse: "Failed to generate pdf!",

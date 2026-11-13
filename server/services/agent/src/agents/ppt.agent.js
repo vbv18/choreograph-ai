@@ -1,5 +1,5 @@
 import generatePPT from "../utils/generate-ppt.js";
-import getModel from "../config/llm.js";
+import getModel from "../utils/getModel.js";
 import getSystemPrompt from "../utils/system-prompt.js";
 import { getFromS3, uploadToS3 } from "../utils/s3.utils.js";
 import { URL_EXPIRY } from "../../../lib/constant.js";

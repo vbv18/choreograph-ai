@@ -1,5 +1,5 @@
 import getSystemPrompt from "../utils/system-prompt.js";
-import getModel from "../config/llm.js";
+import getModel from "../utils/getModel.js";
 import { getMemory } from "../config/memory.js";
 import {
   AIMessage,
