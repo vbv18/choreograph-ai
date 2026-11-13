@@ -1,15 +1,18 @@
 import { AnimatePresence, motion } from "motion/react";
 import { Crown, PanelRightClose } from "lucide-react";
 import { PLANS } from "../lib/data.js";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import createOrder from "../features/createOrder.js";
 import verifyPayment from "../features/verifyPayment.js";
+import getCurrentUser from "../features/getCurrentUser.js";
+import { setUserData } from "../redux/userSlice.js";
 
 export default function BillingModal({ open, onClose }) {
   const { userData } = useSelector((state) => state.user);
   const plan = PLANS[userData?.planId] ?? PLANS["free"];
   const credits = userData?.credits ?? plan?.credits ?? 125;
   const totalCredits = userData?.totalCredits ?? plan?.totalCredits ?? 125;
+  const dispatch = useDispatch();
 
   async function handleUpgradeButton(planId) {
     try {
@@ -29,7 +32,9 @@ export default function BillingModal({ open, onClose }) {
         handler: async (res) => {
           try {
             const { data } = await verifyPayment(res);
-            console.log(data);
+
+            const updatedUser = await getCurrentUser();
+            dispatch(setUserData(updatedUser));
           } catch (error) {
             console.error("[Plan-Purchase-Handler Error", error);
 
