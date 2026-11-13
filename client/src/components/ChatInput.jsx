@@ -23,6 +23,7 @@ import {
   setSelectedConversation,
 } from "../redux/conversationSlice.js";
 import { addMessage, setArtifacts } from "../redux/messageSlice.js";
+import { updateCredits } from "../redux/userSlice.js";
 
 export default function ChatInput({ initialPrompt, onResetPrompt }) {
   const [value, setValue] = useState("");
@@ -97,6 +98,10 @@ export default function ChatInput({ initialPrompt, onResetPrompt }) {
 
       const data = await sendMessage(payload);
 
+      if (data?.credits) {
+        dispatch(updateCredits(data.credits));
+      }
+
       if (data) {
         const receivedArtifacts = Array.isArray(data?.artifacts)
           ? data.artifacts
@@ -120,7 +125,11 @@ export default function ChatInput({ initialPrompt, onResetPrompt }) {
         }
       }
     } catch (error) {
-      console.error("[Chat-Input-Error]", error);
+      console.error("[Chat-Input-Error]", {
+        status: error.response?.status,
+        message: error.message,
+        data: error.response?.data,
+      });
       setValue(prompt);
       setErrorMessage(
         error?.response?.data?.message ||

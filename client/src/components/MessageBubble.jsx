@@ -51,12 +51,12 @@ export default function MessageBubble({
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
         className={`w-fit max-w-[92vw] md:max-w-[72%] px-4 py-2.5 rounded-2xl overflow-hidden leading-relaxed break-words
-          ${isUser
-            ? "bg-linear-to-br from-indigo-500 to-violet-700 text-white rounded-tr-sm"
-            : "text-slate-200 rounded-tl-sm"
+          ${
+            isUser
+              ? "bg-linear-to-br from-indigo-500 to-violet-700 text-white rounded-tr-sm"
+              : "text-slate-200 rounded-tl-sm"
           }`}
       >
-
         {images.length > 0 && (
           <div className="flex flex-wrap gap-3 mt-4">
             {images.map((img, index) => {
@@ -128,7 +128,7 @@ export default function MessageBubble({
             a: ({ href, children }) => {
               const safe = isSafeUrl(href);
 
-              if (!safe) return <span>{children}</span>
+              if (!safe) return <span>{children}</span>;
 
               return (
                 <a
@@ -202,9 +202,7 @@ export default function MessageBubble({
               if (!safeSrc) return null;
 
               return failedImages.has(safeSrc) ? (
-                <span className="text-xs text-gray-400">
-                  Image unavailable
-                </span>
+                <span className="text-xs text-gray-400">Image unavailable</span>
               ) : (
                 <img
                   src={safeSrc}

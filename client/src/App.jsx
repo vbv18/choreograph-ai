@@ -22,7 +22,11 @@ export default function App() {
 
         dispatch(setUserData(userData));
       } catch (error) {
-        console.error("[Get-Current-User-Error]", error);
+        console.error("[Get-Current-User-Error]", {
+          status: error.response?.status,
+          message: error.message,
+          data: error.response?.data,
+        });
 
         if (error.response?.status === 401) {
           dispatch(setUserData(null));

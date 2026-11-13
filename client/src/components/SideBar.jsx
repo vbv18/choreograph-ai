@@ -73,7 +73,11 @@ export default function SideBar() {
             dispatch(setConversations(Array.isArray(data) ? data : []));
           }
         } catch (error) {
-          console.error("[Fetch-Conversations-Error]", error);
+          console.error("[Fetch-Conversations-Error]", {
+            status: error.response?.status,
+            message: error.message,
+            data: error.response?.data,
+          });
         }
       }
     }
@@ -144,7 +148,11 @@ export default function SideBar() {
       setEditingConvId(null);
       setEditingTitle("");
     } catch (error) {
-      console.error("[Edit-Conversation-Error]", error);
+      console.error("[Edit-Conversation-Error]", {
+        status: error.response?.status,
+        message: error.message,
+        data: error.response?.data,
+      });
     } finally {
       setIsSavingEdit(false);
     }
@@ -163,7 +171,11 @@ export default function SideBar() {
         dispatch(deleteConversationAction(convId));
       }
     } catch (error) {
-      console.error("[Delete-Conversation-Error]", error);
+      console.error("[Delete-Conversation-Error]", {
+        status: error.response?.status,
+        message: error.message,
+        data: error.response?.data,
+      });
     } finally {
       setDeletingConvId(null);
     }
@@ -178,7 +190,11 @@ export default function SideBar() {
       await logout();
       dispatch(setUserData(null));
     } catch (error) {
-      console.error("[Logout Error]", error);
+      console.error("[Logout Error]", {
+        status: error.response?.status,
+        message: error.message,
+        data: error.response?.data,
+      });
       alert("LogOut Failed! Try again later.");
     } finally {
       setIsLoggingOut(false);

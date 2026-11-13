@@ -20,7 +20,11 @@ export default function Login() {
 
       dispatch(setUserData(response.data.user));
     } catch (error) {
-      console.error("[Handle-Login-Error]", error);
+      console.error("[Handle-Login-Error]", {
+        status: error.response?.status,
+        message: error.message,
+        data: error.response?.data,
+      });
       throw error;
     }
   }
@@ -35,7 +39,11 @@ export default function Login() {
       const token = await loginData.user.getIdToken();
       await handleLogin(token);
     } catch (error) {
-      console.error("[Google-Login-Error]", error);
+      console.error("[Google-Login-Error]", {
+        status: error.response?.status,
+        message: error.message,
+        data: error.response?.data,
+      });
       setErrorMsg(
         error?.response?.data?.message ||
           "Login failed. Please check your network and try again.",

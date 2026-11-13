@@ -813,7 +813,7 @@
 - **File & Lines:** `server/services/auth/src/repositories/user.repositories.js:25`, `server/services/auth/src/controllers/auth.controller.js:104`
 - **Severity:** Critical
 - **Category:** Backend | **Subcategory:** UI / UX
-- **Description:** When a payment is verified, Billing calls `PATCH /payment` with `userId: payment.userId`. In Billing, `payment.userId` is stored from `req.headers["x-user-id"]`, which the Gateway sets to `srcReq.user.userId` (the MongoDB `_id`). In Auth, `findOneAndUpdateUser(userId, planId)` executes:
+- **Description:** When a payment is verified, Billing calls `PATCH /payment` with `userId: payment.userId`. In Billing, `payment.userId` is stored from `req.headers["x-user-id"]`, which the Gateway sets to `srcReq.user.userId` (the MongoDB `_id`). In Auth, `findUserAndUpdatePlan(userId, planId)` executes:
   ```javascript
   UserModel.findOneAndUpdate({ firebaseUid: userId }, ...)
   ```
@@ -823,9 +823,9 @@
   2. Billing calls Auth `PATCH /payment` with MongoDB `_id`.
   3. Auth queries `{ firebaseUid: "67...a" }`.
   4. Returns 404. User's plan remains "free".
-- **Recommended Fix:** Update `findOneAndUpdateUser` to query by MongoDB `_id`:
+- **Recommended Fix:** Update `findUserAndUpdatePlan` to query by MongoDB `_id`:
   ```javascript
-  export async function findOneAndUpdateUser(userId, planId) {
+  export async function findUserAndUpdatePlan(userId, planId) {
     const plan = PLANS[planId];
     return await UserModel.findByIdAndUpdate(userId, { ... }, { new: true });
   }

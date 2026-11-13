@@ -31,12 +31,16 @@ export default function BillingModal({ open, onClose }) {
         order_id: order?.id,
         handler: async (res) => {
           try {
-            const { data } = await verifyPayment(res);
+            await verifyPayment(res);
 
             const updatedUser = await getCurrentUser();
             dispatch(setUserData(updatedUser));
           } catch (error) {
-            console.error("[Plan-Purchase-Handler Error", error);
+            console.error("[Plan-Purchase-Handler Error", {
+              status: error.response?.status,
+              message: error.message,
+              data: error.response?.data,
+            });
 
             throw error;
           }
@@ -48,7 +52,7 @@ export default function BillingModal({ open, onClose }) {
 
       const razorpay = new window.Razorpay(options);
       razorpay.open();
-    } catch (error) { }
+    } catch (error) {}
   }
 
   return (
