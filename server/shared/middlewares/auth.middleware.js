@@ -22,7 +22,12 @@ export default async function authMiddleware(req, res, next) {
 
     return next();
   } catch (error) {
-    console.error("[Auth-Middleware Error]", error);
+    console.error("[Auth-Middleware Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
+
     return res.status(500).json({
       message: "Internal server error",
     });

@@ -46,3 +46,12 @@ export const PLANS = {
     validity: 30, // in days
   },
 };
+
+export const AGENT_COST = {
+  chat: 1,
+  coding: 5,
+  image: 10,
+  pdf: 7,
+  ppt: 7,
+  search: 5,
+};

@@ -4,7 +4,11 @@ export function getCurrentUser(req, res) {
 
     return res.status(200).json(req.user);
   } catch (error) {
-    console.error("[Get-Current-User Error]", error);
+    console.error("[Get-Current-User Error]", {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
 
     return res.status(500).json({
       message: "Internal server error",
