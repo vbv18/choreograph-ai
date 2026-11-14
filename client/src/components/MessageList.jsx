@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { dummyPrompts } from "../lib/data.js";
 import MessageBubble from "./MessageBubble.jsx";
+import LoadingAnimation from "./LoadingAnimation.jsx";
 
 export default function MessageList({ onSelectPrompt }) {
   const { selectedConversation } = useSelector((state) => state.conversation);
@@ -60,6 +61,9 @@ export default function MessageList({ onSelectPrompt }) {
               artifacts={msg?.artifacts || []}
             />
           ))}
+
+          <LoadingAnimation />
+
           <div ref={messagesEndRef} aria-hidden="true" />
         </div>
       )}
