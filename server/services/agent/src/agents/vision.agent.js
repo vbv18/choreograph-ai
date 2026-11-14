@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs from "fs/promises";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import getModel from "../utils/getModel.js";
 import getSystemPrompt from "../utils/system-prompt.js";
@@ -8,8 +8,22 @@ export async function visionAgent(state) {
     const llm = await getModel("vision");
     const systemPrompt = getSystemPrompt("vision");
 
-    const imageBuffer = await fs.readFile(state.file.path);
-    const base64Image = imageBuffer.toString("base64");
+    const imageFiles = (state.files || []).filter((f) =>
+      f.mimetype?.startsWith("image/"),
+    );
+
+    const imageParts = await Promise.all(
+      imageFiles.map(async (file) => {
+        const imageBuffer = await fs.readFile(file.path);
+        const base64Image = imageBuffer.toString("base64");
+        return {
+          type: "image_url",
+          image_url: {
+            url: `data:${file.mimetype};base64,${base64Image}`,
+          },
+        };
+      }),
+    );
 
     const messages = [
       new SystemMessage(systemPrompt),
@@ -19,12 +33,7 @@ export async function visionAgent(state) {
             type: "text",
             text: state.prompt || "analyze the image",
           },
-          {
-            type: "image_url",
-            image_url: {
-              url: `data:${state.file.mimetype};base64,${base64Image}`,
-            },
-          },
+          ...imageParts,
         ],
       }),
     ];
@@ -33,7 +42,10 @@ export async function visionAgent(state) {
 
     return {
       ...state,
-      aiRsponse: response.content,
+      aiResponse:
+        typeof response.content === "string"
+          ? response.content
+          : JSON.stringify(response.content),
     };
   } catch (error) {
     console.error("[Vision-Agent Error]", {
@@ -47,6 +59,14 @@ export async function visionAgent(state) {
       aiResponse: "Failed to analyze the image!",
     };
   } finally {
-    fs.unlink(state.file.path);
+    for (const f of state.files || []) {
+      if (f.path) {
+        try {
+          await fs.unlink(f.path);
+        } catch (cleanupError) {
+          console.error("[Cleanup Error]", cleanupError.message);
+        }
+      }
+    }
   }
 }

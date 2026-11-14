@@ -53,15 +53,15 @@ workflow.addConditionalEdges(
   },
 );
 
-workflow.addEdge("pdfRAG", "chat");
 workflow.addEdge("search", "chat");
-workflow.addEdge("vision", "chat");
 
 workflow.addEdge("chat", "__end__");
 workflow.addEdge("coding", "__end__");
 workflow.addEdge("image", "__end__");
 workflow.addEdge("pdf", "__end__");
+workflow.addEdge("pdfRAG", "__end__");
 workflow.addEdge("ppt", "__end__");
+workflow.addEdge("vision", "__end__");
 
 const graph = workflow.compile();
 

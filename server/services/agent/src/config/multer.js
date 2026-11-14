@@ -1,9 +1,9 @@
 import fs from "fs";
 import path from "path";
 import multer from "multer";
-import { MULTER_FILE_SIZE } from "../../../lib/constant";
 
 const uploadDir = path.resolve("./temp");
+const MULTER_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, {

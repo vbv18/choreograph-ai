@@ -12,7 +12,7 @@ export async function agent(req, res) {
   const userId = req.headers["x-user-id"];
   const chatServiceUrl = process.env.CHAT_SERVICE_URL;
 
-  let selectedAgent;
+  let selectedAgent = agent;
 
   if (!userId) {
     return res.status(401).json({
@@ -54,6 +54,7 @@ export async function agent(req, res) {
         prompt,
         agent,
         conversationId,
+        files: req.files || [],
       });
 
       selectedAgent = routedState.agent;
@@ -64,6 +65,7 @@ export async function agent(req, res) {
       prompt,
       conversationId,
       agent: selectedAgent,
+      files: req.files || [],
     });
 
     const rawResponse =

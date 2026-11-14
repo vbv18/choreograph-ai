@@ -52,8 +52,8 @@ export const AGENT_COST = {
   coding: 5,
   image: 10,
   pdf: 7,
+  pdfRAG: 12,
   ppt: 7,
   search: 5,
+  vision: 12,
 };
-
-export const MULTER_FILE_SIZE = 20 * 1024 * 1024; // 20 MB

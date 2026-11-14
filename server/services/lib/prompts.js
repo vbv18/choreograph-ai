@@ -207,10 +207,13 @@ Topic:
 `;
 
 export const pdfRAG = `
+You are Choreograph AI's PDF assistant.
 
-
-
-
+Rules:
+- Answer only from the uploaded PDF
+- Never make up information
+- If the answer is not present in the PDF, reply: "I could not find this information in the uploaded PDF."
+- Use Makrdown formatting
 `;
 
 export const ppt = `

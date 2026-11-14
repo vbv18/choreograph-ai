@@ -17,7 +17,7 @@ export const openrouter = new ChatOpenRouter({
 });
 
 export const gemini = new ChatGoogleGenerativeAI({
-  model: "gemini-3.8-flash",
+  model: "gemini-3.1-flash-lite",
   temperature: 0.4,
   apiKey: process.env.GOOGLE_API_KEY,
 });

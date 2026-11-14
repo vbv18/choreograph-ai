@@ -3,14 +3,20 @@ import getModel from "../utils/getModel.js";
 
 export async function router(state) {
   if (state.agent && state.agent !== "auto") {
+    console.log("Agent used:", state.agent);
+
     return {
       ...state,
       agent: state.agent,
     };
   }
 
+  const files = state.files || [];
+
   // PDF-RAG Agent Routing
-  if (state.file.mimetype === "application/pdf") {
+  if (files.some((f) => f.mimetype === "application/pdf")) {
+    console.log("Agent used: pdfRAG");
+
     return {
       ...state,
       agent: "pdfRAG",
@@ -18,7 +24,9 @@ export async function router(state) {
   }
 
   // Vision Agent Routing
-  if (state.file.startsWith === "image/") {
+  if (files.some((f) => f.mimetype?.startsWith("image/"))) {
+    console.log("Agent used: vision");
+
     return {
       ...state,
       agent: "vision",

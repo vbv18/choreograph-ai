@@ -4,6 +4,6 @@ import multer from "../config/multer.js";
 
 const agentRouter = new Router();
 
-agentRouter.post("/chat", multer.single("file"), agentController.agent);
+agentRouter.post("/chat", multer.array("files", 10), agentController.agent);
 
 export default agentRouter;
