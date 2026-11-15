@@ -77,38 +77,21 @@ export async function agent(req, res, next) {
         try {
           const buffer = await fs.readFile(file.path);
 
-          const s3FileName =
-            `attachments/${conversationId}/${Date.now()}-${file.originalname}`;
+          const s3FileName = `attachments/${conversationId}/${Date.now()}-${file.originalname}`;
 
-          await uploadToS3(
-            s3FileName,
-            buffer,
-            file.mimetype
-          );
+          await uploadToS3(s3FileName, buffer, file.mimetype);
 
-          const fileUrl = await getFromS3(
-            s3FileName,
-            7 * 24 * 60
-          );
+          const fileUrl = await getFromS3(s3FileName, 7 * 24 * 60);
 
           attachments.push({
             name: file.originalname,
             url: fileUrl,
-            fileType:
-              file.mimetype === "application/pdf"
-                ? "pdf"
-                : "image",
+            fileType: file.mimetype === "application/pdf" ? "pdf" : "image",
           });
-
         } catch (uploadError) {
-          console.error(
-            "[Attachment-Upload-Error]",
-            uploadError.message
-          );
+          console.error("[Attachment-Upload-Error]", uploadError.message);
 
-          throw new Error(
-            `Failed to upload attachment: ${file.originalname}`
-          );
+          throw new Error(`Failed to upload attachment: ${file.originalname}`);
         }
       }
     }
@@ -126,7 +109,7 @@ export async function agent(req, res, next) {
       {
         headers: requestHeaders,
         timeout: 10000,
-      }
+      },
     );
 
     // 6. Execute selected agent
@@ -141,9 +124,7 @@ export async function agent(req, res, next) {
     // 7. Normalize AI response
 
     const rawResponse =
-      typeof result?.aiResponse === "string"
-        ? result.aiResponse.trim()
-        : "";
+      typeof result?.aiResponse === "string" ? result.aiResponse.trim() : "";
 
     const aiResponse =
       rawResponse ||
@@ -155,9 +136,7 @@ export async function agent(req, res, next) {
         ? [result.artifact]
         : [];
 
-    const images = Array.isArray(result?.images)
-      ? result.images
-      : [];
+    const images = Array.isArray(result?.images) ? result.images : [];
 
     // 8. Persist assistant message
 
@@ -173,7 +152,7 @@ export async function agent(req, res, next) {
       {
         headers: requestHeaders,
         timeout: 10000,
-      }
+      },
     );
 
     // 9. Deduct credits
@@ -182,7 +161,7 @@ export async function agent(req, res, next) {
       userId,
       selectedAgent,
       prompt,
-      result
+      result,
     );
 
     // 10. Update Redis memory
@@ -199,10 +178,7 @@ export async function agent(req, res, next) {
         },
       ]);
     } catch (cacheError) {
-      console.error(
-        "[Memory-Cache-Error]",
-        cacheError.message
-      );
+      console.error("[Memory-Cache-Error]", cacheError.message);
     }
 
     // 11. Send response
@@ -215,10 +191,8 @@ export async function agent(req, res, next) {
       artifacts,
       credits: creditResult?.credits,
     });
-
   } catch (error) {
     return next(error);
-
   } finally {
     // 12. Clean up temporary uploaded files
 
@@ -226,7 +200,7 @@ export async function agent(req, res, next) {
       await Promise.allSettled(
         req.files
           .filter((file) => file.path)
-          .map((file) => fs.unlink(file.path))
+          .map((file) => fs.unlink(file.path)),
       );
     }
   }

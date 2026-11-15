@@ -60,12 +60,12 @@ export const AGENT_COST = {
 
 export const AGENT_LIMIT = {
   // per minute limits
-  'chat': 20,
-  'coding': 5,
-  'image': 5,
-  'pdf': 5,
-  'pdfRAG': 5,
-  'ppt': 5,
-  'search': 7,
-  'vision': 3,
-}
+  chat: 20,
+  coding: 5,
+  image: 5,
+  pdf: 5,
+  pdfRAG: 5,
+  ppt: 5,
+  search: 7,
+  vision: 3,
+};

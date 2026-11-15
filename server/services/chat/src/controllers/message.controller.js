@@ -3,8 +3,15 @@ import { getConversationById } from "../repositories/conversation.repositories.j
 
 export async function saveMessage(req, res) {
   try {
-    const { conversationId, role, content, images, artifact, artifacts, attachments } =
-      req.body;
+    const {
+      conversationId,
+      role,
+      content,
+      images,
+      artifact,
+      artifacts,
+      attachments,
+    } = req.body;
 
     if (!conversationId || !role || content === undefined || content === null) {
       return res.status(400).json({
