@@ -15,6 +15,13 @@ const messageSchema = new mongoose.Schema(
     content: {
       type: String,
     },
+    attachments: [
+      {
+        name: String,
+        url: String,
+        fileType: String,
+      },
+    ],
     images: [String],
     artifacts: [artifactSchema],
   },

@@ -7,6 +7,7 @@ export async function saveMessage(
   content,
   images = [],
   artifacts = [],
+  attachments = [],
 ) {
   if (!conversationId || !mongoose.Types.ObjectId.isValid(conversationId)) {
     throw new Error("A valid conversationId is required to save a message");
@@ -18,6 +19,7 @@ export async function saveMessage(
     content,
     images: images || [],
     artifacts: artifacts || [],
+    attachments: attachments || [],
   });
 
   return message;
