@@ -5,39 +5,57 @@ import MessageBubble from "./MessageBubble.jsx";
 import LoadingAnimation from "./LoadingAnimation.jsx";
 
 export default function MessageList({ onSelectPrompt }) {
-  const { selectedConversation } = useSelector((state) => state.conversation);
-  const { messages } = useSelector((state) => state.message);
+  const { selectedConversation } = useSelector(
+    (state) => state.conversation
+  );
+
+  const { messages, isLoading } = useSelector(
+    (state) => state.message
+  );
+
   const messagesEndRef = useRef(null);
 
-  const hasMessages = Array.isArray(messages) && messages.length > 0;
+  const hasMessages =
+    Array.isArray(messages) && messages.length > 0;
 
   useEffect(() => {
-    if (hasMessages) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, hasMessages]);
+    requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    });
+  }, [messages?.length, isLoading]);
 
   return (
     <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6 space-y-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden min-h-0">
+
       {!hasMessages || !selectedConversation ? (
         <div className="h-full flex flex-col items-center justify-center gap-6 text-center select-none py-10">
+
           <div className="flex flex-col items-center gap-2 max-w-sm">
+
             <div className="w-10 h-10 rounded-xl bg-linear-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-sm font-bold shadow-md shadow-indigo-500/25 mb-1">
               CA
             </div>
+
             <h2 className="text-[20px] font-semibold text-slate-100 tracking-tight">
               Choreograph AI
             </h2>
+
             <p className="text-[14px] font-medium text-slate-400">
               How can I help you today?
             </p>
+
             <p className="text-[13px] text-slate-500 max-w-[280px] leading-relaxed">
               Ask me anything — code ideas, agent architectures, or general
               technical questions.
             </p>
+
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-2 max-w-lg">
+
             {dummyPrompts.map((prompt, index) => (
               <button
                 key={index}
@@ -48,10 +66,12 @@ export default function MessageList({ onSelectPrompt }) {
                 {prompt}
               </button>
             ))}
+
           </div>
         </div>
       ) : (
         <div className="space-y-5">
+
           {messages.map((msg, index) => (
             <MessageBubble
               key={msg?._id || `${msg?.role || "msg"}-${index}`}
@@ -59,14 +79,21 @@ export default function MessageList({ onSelectPrompt }) {
               content={msg?.content}
               images={msg?.images || []}
               artifacts={msg?.artifacts || []}
+              attachments={msg?.attachments || []}
             />
           ))}
 
-          <LoadingAnimation />
+          {isLoading && (
+            <div className="flex justify-center">
+              <LoadingAnimation />
+            </div>
+          )}
 
           <div ref={messagesEndRef} aria-hidden="true" />
+
         </div>
       )}
+
     </div>
   );
 }

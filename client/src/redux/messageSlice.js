@@ -8,6 +8,7 @@ const messageSlice = createSlice({
     isArtifactOpen: false,
     activeArtifactIndex: 0,
     activeFileIndex: 0,
+    isLoading: false,
   },
   reducers: {
     setMessages: (state, action) => {
@@ -47,6 +48,9 @@ const messageSlice = createSlice({
     setActiveFileIndex: (state, action) => {
       state.activeFileIndex = action.payload;
     },
+    setIsLoading: (state, action) => {
+      state.isLoading = action.payload;
+    },
   },
 });
 
@@ -58,6 +62,7 @@ export const {
   setArtifactOpen,
   setActiveArtifactIndex,
   setActiveFileIndex,
+  setIsLoading,
 } = messageSlice.actions;
 
 export default messageSlice.reducer;

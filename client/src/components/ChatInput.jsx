@@ -24,16 +24,17 @@ import {
   setConversationTitle,
   setSelectedConversation,
 } from "../redux/conversationSlice.js";
-import { addMessage, setArtifacts } from "../redux/messageSlice.js";
+import { addMessage, setArtifacts, setIsLoading } from "../redux/messageSlice.js";
 import { updateCredits } from "../redux/userSlice.js";
 
 // ChatIput Component
 export default function ChatInput({ initialPrompt, onResetPrompt }) {
   const [value, setValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const dispatch = useDispatch();
   const { selectedConversation } = useSelector((state) => state.conversation);
+  const { isLoading } = useSelector((state) => state.message);
   const [selectedAgent, setSelectedAgent] = useState("auto");
   const lastConsumedPrompt = useRef(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -54,6 +55,9 @@ export default function ChatInput({ initialPrompt, onResetPrompt }) {
   }, [initialPrompt, onResetPrompt]);
 
   async function handleSendMessage() {
+
+    dispatch(setIsLoading(true));
+
     const prompt = value.trim();
 
     if (!prompt || isLoading) return;
@@ -88,10 +92,17 @@ export default function ChatInput({ initialPrompt, onResetPrompt }) {
         );
       }
 
+      const userAttachments = selectedFiles.map((file) => ({
+        name: file.name,
+        url: URL.createObjectURL(file),
+        fileType: file.type === "application/pdf" ? "pdf" : "image",
+      }));
+
       dispatch(
         addMessage({
           role: "user",
           content: prompt,
+          attachments: userAttachments,
         }),
       );
 
@@ -106,6 +117,8 @@ export default function ChatInput({ initialPrompt, onResetPrompt }) {
       if (fileRef.current) fileRef.current.value = "";
 
       const data = await sendMessage(formData);
+
+      dispatch(setIsLoading(false));
 
       if (data) {
         if (data.credits) {

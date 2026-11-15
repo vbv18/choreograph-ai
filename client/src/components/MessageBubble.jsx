@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Check, Copy, ExternalLink, X, Code2 } from "lucide-react";
+import { Check, Copy, ExternalLink, X, Code2, FileText } from "lucide-react";
 import { useDispatch } from "react-redux";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { atomOneDark } from "react-syntax-highlighter/dist/cjs/styles/hljs";
@@ -18,6 +18,7 @@ export default function MessageBubble({
   content,
   images = [],
   artifacts = [],
+  attachments = [],
 }) {
   const dispatch = useDispatch();
   const isUser = role === "user";
@@ -32,9 +33,9 @@ export default function MessageBubble({
 
       setTimeout(() => {
         setCopiedCode("");
-      }, 2000);
+      }, 4000);
     } catch {
-      // Display an error toast or other user feedback.
+      alert("Error! Copy after sometime.");
     }
   }
 
@@ -47,7 +48,46 @@ export default function MessageBubble({
   }
 
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+    <div className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}>
+      {attachments.length > 0 && (
+        <div
+          className={`flex flex-wrap gap-2 mb-2 max-w-[92vw] md:max-w-[72%] ${isUser ? "justify-end" : "justify-start"
+            }`}
+        >
+          {attachments.map((att, idx) => {
+            const isImg =
+              att.fileType === "image" ||
+              att.name?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i);
+
+            if (isImg) {
+              return (
+                <img
+                  key={idx}
+                  src={att.url}
+                  alt={att.name || "attachment"}
+                  onClick={() => setLightBox(att.url)}
+                  className="w-16 h-16 rounded-xl object-cover border border-white/10 bg-white/5 cursor-zoom-in hover:opacity-90 transition-all shadow-sm"
+                />
+              );
+            }
+
+            return (
+              <a
+                key={idx}
+                href={att.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] border border-white/10 text-xs text-slate-200 transition-colors max-w-[220px]"
+                title={att.name}
+              >
+                <FileText size={16} className="text-rose-400 shrink-0" />
+                <span className="truncate">{att.name}</span>
+              </a>
+            );
+          })}
+        </div>
+      )}
+
       <div
         className={`w-fit max-w-[92vw] md:max-w-[72%] px-4 py-2.5 rounded-2xl overflow-hidden leading-relaxed break-words
           ${isUser
@@ -169,10 +209,10 @@ export default function MessageBubble({
                           Copied
                         </>
                       ) : (
-                        <>
+                        <div className="flex gap-1 cursor-pointer">
                           <Copy size={14} />
                           Copy
-                        </>
+                        </div>
                       )}
                     </button>
                   </div>

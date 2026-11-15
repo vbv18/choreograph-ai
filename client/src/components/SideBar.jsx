@@ -258,7 +258,7 @@ export default function SideBar() {
                     Choreograph AI
                   </span>
                   <span className="text-[10px] font-medium text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-1.5 py-0.5 rounded-md shrink-0">
-                    {userData?.plan || "free"}
+                    {plan.name || "free"}
                   </span>
                 </div>
 
@@ -338,160 +338,157 @@ export default function SideBar() {
           >
             {safeConversations.length === 0
               ? !isCollapsed && (
-                  <div className="px-3 py-6 text-center flex flex-col items-center justify-center gap-1.5">
-                    <div className="w-8 h-8 rounded-lg bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-slate-500">
-                      <MessageSquare size={14} />
-                    </div>
-                    <p className="text-[12px] font-medium text-slate-400">
-                      No chats yet
-                    </p>
-                    <p className="text-[11px] text-slate-500 max-w-[170px]">
-                      Start a new conversation to build or query agents.
-                    </p>
+                <div className="px-3 py-6 text-center flex flex-col items-center justify-center gap-1.5">
+                  <div className="w-8 h-8 rounded-lg bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-slate-500">
+                    <MessageSquare size={14} />
                   </div>
-                )
+                  <p className="text-[12px] font-medium text-slate-400">
+                    No chats yet
+                  </p>
+                  <p className="text-[11px] text-slate-500 max-w-[170px]">
+                    Start a new conversation to build or query agents.
+                  </p>
+                </div>
+              )
               : safeConversations.map((conv) => {
-                  const isActive = selectedConversation?._id === conv?._id;
-                  const title = conv?.title?.trim() || "New Chat";
+                const isActive = selectedConversation?._id === conv?._id;
+                const title = conv?.title?.trim() || "New Chat";
 
-                  if (isCollapsed) {
-                    return (
-                      <button
-                        key={conv._id}
-                        type="button"
-                        onClick={() => handleSelectConversation(conv)}
-                        title={title}
-                        aria-label={title}
-                        aria-current={isActive ? "page" : undefined}
-                        className={`w-10 h-10 mx-auto flex items-center justify-center rounded-xl transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500/50
-                                                ${
-                                                  isActive
-                                                    ? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/25"
-                                                    : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
-                                                }`}
-                      >
-                        <MessageSquare size={16} />
-                      </button>
-                    );
-                  }
-
-                  const isEditing = editingConvId === conv._id;
-                  const isDeleting = deletingConvId === conv._id;
-
+                if (isCollapsed) {
                   return (
-                    <div
+                    <button
                       key={conv._id}
-                      className={`group relative flex items-center justify-between w-full rounded-xl transition-all duration-150 border ${
-                        isActive
-                          ? "bg-indigo-500/10 border-indigo-500/20 text-slate-100"
-                          : "bg-transparent border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
-                      }`}
+                      type="button"
+                      onClick={() => handleSelectConversation(conv)}
+                      title={title}
+                      aria-label={title}
+                      aria-current={isActive ? "page" : undefined}
+                      className={`w-10 h-10 mx-auto flex items-center justify-center rounded-xl transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500/50
+                                                ${isActive
+                          ? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/25"
+                          : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
+                        }`}
                     >
-                      {isEditing ? (
-                        <form
-                          onSubmit={(e) => handleSaveEdit(conv._id, e)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex items-center gap-1.5 w-full p-1.5 min-w-0"
+                      <MessageSquare size={16} />
+                    </button>
+                  );
+                }
+
+                const isEditing = editingConvId === conv._id;
+                const isDeleting = deletingConvId === conv._id;
+
+                return (
+                  <div
+                    key={conv._id}
+                    className={`group relative flex items-center justify-between w-full rounded-xl transition-all duration-150 border ${isActive
+                      ? "bg-indigo-500/10 border-indigo-500/20 text-slate-100"
+                      : "bg-transparent border-transparent text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
+                      }`}
+                  >
+                    {isEditing ? (
+                      <form
+                        onSubmit={(e) => handleSaveEdit(conv._id, e)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center gap-1.5 w-full p-1.5 min-w-0"
+                      >
+                        <div className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0">
+                          <MessageSquare size={13} />
+                        </div>
+                        <input
+                          type="text"
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Escape") {
+                              handleCancelEdit(e);
+                            }
+                          }}
+                          disabled={isSavingEdit}
+                          autoFocus
+                          className="flex-1 min-w-0 bg-[#12141c] text-[13px] text-slate-100 px-2 py-1 rounded-lg border border-indigo-500/40 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                        <button
+                          type="submit"
+                          disabled={isSavingEdit || !editingTitle.trim()}
+                          title="Save title"
+                          aria-label="Save title"
+                          className="p-1 rounded-lg text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-colors disabled:opacity-40 cursor-pointer"
                         >
-                          <div className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0">
+                          {isSavingEdit ? (
+                            <Loader2 size={13} className="animate-spin" />
+                          ) : (
+                            <Check size={13} />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCancelEdit}
+                          disabled={isSavingEdit}
+                          title="Cancel"
+                          aria-label="Cancel"
+                          className="p-1 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/[0.06] transition-colors cursor-pointer"
+                        >
+                          <X size={13} />
+                        </button>
+                      </form>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectConversation(conv)}
+                          title={title}
+                          aria-current={isActive ? "page" : undefined}
+                          className="flex items-center gap-2.5 min-w-0 flex-1 px-2.5 py-2 text-left cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500/50 rounded-l-xl"
+                        >
+                          <div
+                            className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-colors ${isActive
+                              ? "bg-indigo-500/20 text-indigo-300"
+                              : "bg-white/[0.04] text-slate-500 group-hover:text-slate-300"
+                              }`}
+                          >
                             <MessageSquare size={13} />
                           </div>
-                          <input
-                            type="text"
-                            value={editingTitle}
-                            onChange={(e) => setEditingTitle(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Escape") {
-                                handleCancelEdit(e);
-                              }
-                            }}
-                            disabled={isSavingEdit}
-                            autoFocus
-                            className="flex-1 min-w-0 bg-[#12141c] text-[13px] text-slate-100 px-2 py-1 rounded-lg border border-indigo-500/40 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                          />
+                          <span className="text-[13px] font-medium truncate flex-1">
+                            {title}
+                          </span>
+                        </button>
+
+                        <div className="flex items-center gap-0.5 pr-1.5 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
                           <button
-                            type="submit"
-                            disabled={isSavingEdit || !editingTitle.trim()}
-                            title="Save title"
-                            aria-label="Save title"
-                            className="p-1 rounded-lg text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-colors disabled:opacity-40 cursor-pointer"
+                            type="button"
+                            onClick={(e) => handleStartEdit(conv, e)}
+                            title="Edit title"
+                            aria-label="Edit title"
+                            className="w-6 h-6 flex items-center justify-center rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/15 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500/50"
                           >
-                            {isSavingEdit ? (
-                              <Loader2 size={13} className="animate-spin" />
+                            <Pencil size={13} />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={(e) =>
+                              handleDeleteConversation(conv._id, e)
+                            }
+                            disabled={isDeleting}
+                            title="Delete conversation"
+                            aria-label="Delete conversation"
+                            className="w-6 h-6 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/15 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-500/50 disabled:opacity-40"
+                          >
+                            {isDeleting ? (
+                              <Loader2
+                                size={13}
+                                className="animate-spin text-rose-400"
+                              />
                             ) : (
-                              <Check size={13} />
+                              <Trash2 size={13} />
                             )}
                           </button>
-                          <button
-                            type="button"
-                            onClick={handleCancelEdit}
-                            disabled={isSavingEdit}
-                            title="Cancel"
-                            aria-label="Cancel"
-                            className="p-1 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/[0.06] transition-colors cursor-pointer"
-                          >
-                            <X size={13} />
-                          </button>
-                        </form>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => handleSelectConversation(conv)}
-                            title={title}
-                            aria-current={isActive ? "page" : undefined}
-                            className="flex items-center gap-2.5 min-w-0 flex-1 px-2.5 py-2 text-left cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500/50 rounded-l-xl"
-                          >
-                            <div
-                              className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                                isActive
-                                  ? "bg-indigo-500/20 text-indigo-300"
-                                  : "bg-white/[0.04] text-slate-500 group-hover:text-slate-300"
-                              }`}
-                            >
-                              <MessageSquare size={13} />
-                            </div>
-                            <span className="text-[13px] font-medium truncate flex-1">
-                              {title}
-                            </span>
-                          </button>
-
-                          <div className="flex items-center gap-0.5 pr-1.5 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
-                            <button
-                              type="button"
-                              onClick={(e) => handleStartEdit(conv, e)}
-                              title="Edit title"
-                              aria-label="Edit title"
-                              className="w-6 h-6 flex items-center justify-center rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/15 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500/50"
-                            >
-                              <Pencil size={13} />
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={(e) =>
-                                handleDeleteConversation(conv._id, e)
-                              }
-                              disabled={isDeleting}
-                              title="Delete conversation"
-                              aria-label="Delete conversation"
-                              className="w-6 h-6 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/15 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-500/50 disabled:opacity-40"
-                            >
-                              {isDeleting ? (
-                                <Loader2
-                                  size={13}
-                                  className="animate-spin text-rose-400"
-                                />
-                              ) : (
-                                <Trash2 size={13} />
-                              )}
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
           </nav>
         </div>
 
