@@ -1,75 +1,150 @@
 import axios from "axios";
+import fs from "fs/promises";
 import graph from "../graph/graph.js";
+import { router } from "../graph/router.js";
 import { updateMemoryBatch } from "../config/memory.js";
 import deductCredits from "../utils/deductCredits.js";
-import { router } from "../graph/router.js";
+import { uploadToS3, getFromS3 } from "../utils/s3.utils.js";
+import rateLimiter from "../config/rateLimiter.js";
 
-export async function agent(req, res) {
-  let result;
-
-  const { prompt, conversationId, agent } = req.body;
+export async function agent(req, res, next) {
+  const { prompt, conversationId, agent: requestedAgent } = req.body;
 
   const userId = req.headers["x-user-id"];
   const chatServiceUrl = process.env.CHAT_SERVICE_URL;
 
-  let selectedAgent = agent;
-
-  if (!userId) {
-    return res.status(401).json({
-      success: false,
-      message: "Authentication required",
-    });
-  }
-
-  if (!prompt?.trim() || !conversationId?.trim() || !agent?.trim()) {
-    return res.status(400).json({
-      message: "prompt, conversationId, and agent are required",
-    });
-  }
-
-  if (!chatServiceUrl) {
-    throw new Error("CHAT_SERVICE_URL is not configured");
-  }
+  let selectedAgent = requestedAgent;
 
   try {
-    const requestHeaders = { "x-user-id": userId };
+    // 1. Validate request
 
-    // 1. Persist user message.
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    if (
+      typeof prompt !== "string" ||
+      !prompt.trim() ||
+      typeof conversationId !== "string" ||
+      !conversationId.trim() ||
+      typeof requestedAgent !== "string" ||
+      !requestedAgent.trim()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "prompt, conversationId, and agent are required",
+      });
+    }
+
+    if (!chatServiceUrl) {
+      throw new Error("CHAT_SERVICE_URL is not configured");
+    }
+
+    const requestHeaders = {
+      "x-user-id": userId,
+    };
+
+    // 2. Agent routing
+
+    if (requestedAgent === "auto") {
+      const routedState = await router({
+        prompt,
+        agent: requestedAgent,
+        conversationId,
+        files: req.files || [],
+      });
+
+      selectedAgent = routedState?.agent;
+
+      if (!selectedAgent || selectedAgent === "auto") {
+        throw new Error("Unable to determine the appropriate agent");
+      }
+    }
+
+    // 3. Rate limiting
+
+    await rateLimiter(userId, selectedAgent);
+
+    // 4. Upload attachments to S3
+
+    const attachments = [];
+
+    if (Array.isArray(req.files) && req.files.length > 0) {
+      for (const file of req.files) {
+        try {
+          const buffer = await fs.readFile(file.path);
+
+          const s3FileName =
+            `attachments/${conversationId}/${Date.now()}-${file.originalname}`;
+
+          await uploadToS3(
+            s3FileName,
+            buffer,
+            file.mimetype
+          );
+
+          const fileUrl = await getFromS3(
+            s3FileName,
+            7 * 24 * 60
+          );
+
+          attachments.push({
+            name: file.originalname,
+            url: fileUrl,
+            fileType:
+              file.mimetype === "application/pdf"
+                ? "pdf"
+                : "image",
+          });
+
+        } catch (uploadError) {
+          console.error(
+            "[Attachment-Upload-Error]",
+            uploadError.message
+          );
+
+          throw new Error(
+            `Failed to upload attachment: ${file.originalname}`
+          );
+        }
+      }
+    }
+
+    // 5. Persist user message
+
     await axios.post(
       `${chatServiceUrl}/messages/`,
       {
         conversationId,
         role: "user",
-        content: prompt,
+        content: prompt.trim(),
+        attachments,
       },
       {
         headers: requestHeaders,
         timeout: 10000,
-      },
+      }
     );
 
-    // Routing to agent
-    if (agent === "auto") {
-      const routedState = await router({
-        prompt,
-        agent,
-        conversationId,
-        files: req.files || [],
-      });
+    // 6. Execute selected agent
 
-      selectedAgent = routedState.agent;
-    }
-
-    // 2. Generate the response.
-    result = await graph.invoke({
-      prompt,
+    const result = await graph.invoke({
+      prompt: prompt.trim(),
       conversationId,
       agent: selectedAgent,
       files: req.files || [],
     });
 
+    // 7. Normalize AI response
+
     const rawResponse =
-      typeof result?.aiResponse === "string" ? result.aiResponse.trim() : "";
+      typeof result?.aiResponse === "string"
+        ? result.aiResponse.trim()
+        : "";
+
     const aiResponse =
       rawResponse ||
       "I'm sorry, I couldn't generate a response for your request.";
@@ -80,66 +155,79 @@ export async function agent(req, res) {
         ? [result.artifact]
         : [];
 
-    // Deduct Credits
-    const creditResult = await deductCredits(
-      userId,
-      selectedAgent,
-      prompt,
-      result,
-    );
+    const images = Array.isArray(result?.images)
+      ? result.images
+      : [];
 
-    // 3. Persist assistant message.
+    // 8. Persist assistant message
+
     await axios.post(
       `${chatServiceUrl}/messages/`,
       {
         conversationId,
         role: "assistant",
         content: aiResponse,
-        images: result?.images || [],
+        images,
         artifacts,
-        artifact: artifacts,
       },
       {
         headers: requestHeaders,
         timeout: 10000,
-      },
+      }
     );
 
-    // 4. Update Redis once, after persistence succeeds.
+    // 9. Deduct credits
+
+    const creditResult = await deductCredits(
+      userId,
+      selectedAgent,
+      prompt,
+      result
+    );
+
+    // 10. Update Redis memory
+
     try {
       await updateMemoryBatch(conversationId, [
-        { role: "user", content: prompt },
-        { role: "assistant", content: aiResponse },
+        {
+          role: "user",
+          content: prompt.trim(),
+        },
+        {
+          role: "assistant",
+          content: aiResponse,
+        },
       ]);
     } catch (cacheError) {
-      console.error("[Memory-Cache-Error]", cacheError.message);
+      console.error(
+        "[Memory-Cache-Error]",
+        cacheError.message
+      );
     }
 
+    // 11. Send response
+
     return res.status(200).json({
+      success: true,
       message: "Agent Response",
       answer: aiResponse,
-      images: result?.images || [],
+      images,
       artifacts,
-      artifact: artifacts,
-      credits: creditResult.credits,
+      credits: creditResult?.credits,
     });
+
   } catch (error) {
-    console.error("[Agent-Controller Error]", {
-      status: error.response?.status,
-      message: error.message,
-      data: error.response?.data,
-    });
+    return next(error);
 
-    const statusCode = error?.response?.status || 500;
+  } finally {
+    // 12. Clean up temporary uploaded files
 
-    const clientMessage =
-      error?.response?.data?.message ||
-      error?.message ||
-      "Internal Server Error";
-
-    return res.status(statusCode).json({
-      status: false,
-      message: clientMessage,
-    });
+    if (Array.isArray(req.files)) {
+      await Promise.allSettled(
+        req.files
+          .filter((file) => file.path)
+          .map((file) => fs.unlink(file.path))
+      );
+    }
   }
 }
