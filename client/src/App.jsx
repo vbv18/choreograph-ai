@@ -41,7 +41,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[#0d0f14] text-white">
+      <div className="h-dvh flex items-center justify-center bg-[#0d0f14] text-white">
         Loading...
       </div>
     );

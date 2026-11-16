@@ -5,7 +5,7 @@ export default function NotFound() {
   const navigate = useNavigate();
 
   return (
-    <div className="h-screen w-full flex items-center justify-center bg-[#0d0f14] text-white p-4">
+    <div className="h-dvh w-full flex items-center justify-center bg-[#0d0f14] text-white p-4">
       <div className="w-full max-w-md bg-[#13151c] border border-white/[0.08] rounded-2xl p-8 flex flex-col items-center text-center shadow-2xl relative overflow-hidden">
         {/* Subtle background glow accents */}
         <div className="absolute -top-16 -left-16 w-36 h-36 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
