@@ -12,6 +12,7 @@ import {
   ImageIcon,
   Search,
   Eye,
+  ChevronDown,
   X,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
@@ -24,7 +25,11 @@ import {
   setConversationTitle,
   setSelectedConversation,
 } from "../redux/conversationSlice.js";
-import { addMessage, setArtifacts, setIsLoading } from "../redux/messageSlice.js";
+import {
+  addMessage,
+  setArtifacts,
+  setIsLoading,
+} from "../redux/messageSlice.js";
 import { updateCredits } from "../redux/userSlice.js";
 
 // ChatIput Component
@@ -36,9 +41,21 @@ export default function ChatInput({ initialPrompt, onResetPrompt }) {
   const { selectedConversation } = useSelector((state) => state.conversation);
   const { isLoading } = useSelector((state) => state.message);
   const [selectedAgent, setSelectedAgent] = useState("auto");
+  const [isAgentMenuOpen, setIsAgentMenuOpen] = useState(false);
+  const agentMenuRef = useRef(null);
   const lastConsumedPrompt = useRef(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const fileRef = useRef();
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (agentMenuRef.current && !agentMenuRef.current.contains(e.target)) {
+        setIsAgentMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!initialPrompt) {
@@ -55,7 +72,6 @@ export default function ChatInput({ initialPrompt, onResetPrompt }) {
   }, [initialPrompt, onResetPrompt]);
 
   async function handleSendMessage() {
-
     dispatch(setIsLoading(true));
 
     const prompt = value.trim();
@@ -210,8 +226,11 @@ export default function ChatInput({ initialPrompt, onResetPrompt }) {
     },
   ];
 
+  const currentAgentObj = agents.find((a) => a.id === selectedAgent) || agents[0];
+  const CurrentAgentIcon = currentAgentObj.icon;
+
   return (
-    <div className="w-full overflow-hidden px-3 md:px-6 py-4 border-t border-white/[0.06] bg-[#0d0f14] shrink-0">
+    <div className="relative w-full px-3 md:px-6 py-4 border-t border-white/[0.06] bg-[#0d0f14] shrink-0">
       {errorMessage && (
         <div className="max-w-4xl mx-auto mb-2.5 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
@@ -236,19 +255,15 @@ export default function ChatInput({ initialPrompt, onResetPrompt }) {
                 key={idx}
                 className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-md bg-white/[0.08] text-xs text-slate-300"
               >
-                {
-                  file.type === "application/pdf" ? (
-                    <FileText size={14} />
-                  ) : file.type.startsWith("image/") ? (
-                    <ImageIcon size={14} />
-                  ) : (
-                    <FileText size={14} />
-                  )
-                }
+                {file.type === "application/pdf" ? (
+                  <FileText size={14} />
+                ) : file.type.startsWith("image/") ? (
+                  <ImageIcon size={14} />
+                ) : (
+                  <FileText size={14} />
+                )}
 
-                <span className="max-w-[160px] truncate">
-                  {file.name}
-                </span>
+                <span className="max-w-[160px] truncate">{file.name}</span>
 
                 <button
                   type="button"
@@ -263,7 +278,116 @@ export default function ChatInput({ initialPrompt, onResetPrompt }) {
             ))}
           </div>
         )}
-        <div className="flex w-full gap-2 pr-2 flex-wrap">
+
+        {/* Responsive Mobile Agent Dropdown */}
+        <div ref={agentMenuRef} className="relative md:hidden w-full">
+          <button
+            type="button"
+            onClick={() => setIsAgentMenuOpen((prev) => !prev)}
+            aria-expanded={isAgentMenuOpen}
+            aria-haspopup="true"
+            className="
+              inline-flex items-center justify-between gap-2
+              min-h-[24px] min-w-[72px]
+              px-2 py-1.5
+              rounded-xl
+              text-sm font-semibold
+              bg-gradient-to-r from-indigo-500 to-violet-600
+              text-white
+              border border-indigo-400/20
+              shadow-lg shadow-indigo-500/20
+              hover:brightness-110
+              active:scale-[0.97]
+              transition-all duration-200
+              cursor-pointer
+            "
+          >
+            <span className="flex items-center gap-2 min-w-0">
+              <CurrentAgentIcon size={16} />
+              <span className="truncate">{currentAgentObj.label}</span>
+            </span>
+
+            <ChevronDown
+              size={15}
+              className={`shrink-0 transition-transform duration-200 
+                ${isAgentMenuOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          {isAgentMenuOpen && (
+            <div
+              className="
+                absolute left-0 bottom-full mb-3
+                z-50
+                w-[min(280px,calc(100vw-32px))]
+                max-h-[min(60dvh,400px)]
+                overflow-y-auto overscroll-contain
+                rounded-2xl
+                border border-white/10
+                bg-[#171923]
+                shadow-[0_12px_45px_rgba(0,0,0,0.65)]
+                p-2
+                animate-in fade-in slide-in-from-bottom-2 duration-200
+              "
+            >
+              <div className="px-2.5 pt-2 pb-3">
+                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">
+                  Select an agent
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-1.5">
+                {agents.map((agent) => {
+                  const isActive = selectedAgent === agent.id;
+                  const Icon = agent.icon;
+
+                  return (
+                    <button
+                      key={agent.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedAgent(agent.id);
+                        setIsAgentMenuOpen(false);
+                      }}
+                      aria-pressed={isActive}
+                      className={`
+                        flex items-center gap-2
+                        min-w-0 min-h-[44px]
+                        px-2.5 py-2.5
+                        rounded-xl
+                        text-left text-xs font-medium
+                        transition-all duration-150
+                        cursor-pointer
+                        ${isActive
+                          ? "bg-indigo-500/20 text-indigo-300 border border-indigo-400/30"
+                          : "text-slate-300 border border-transparent hover:bg-white/[0.07] active:bg-white/[0.1]"
+                        }
+                      `}
+                    >
+                      <Icon
+                        size={16}
+                        className={`shrink-0 ${isActive ? "text-indigo-400" : "text-slate-400"
+                          }`}
+                      />
+
+                      <span className="truncate">{agent.label}</span>
+
+                      {isActive && (
+                        <span className="ml-auto shrink-0 text-indigo-400 text-xs">
+                          ✓
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+
+        {/* Desktop / tablet agent pills (>= md) */}
+        <div className="hidden md:flex w-full gap-2 flex-wrap items-center">
           {agents.map((agent) => {
             const isActive = selectedAgent === agent.id;
             const Icon = agent.icon;
@@ -271,12 +395,15 @@ export default function ChatInput({ initialPrompt, onResetPrompt }) {
             return (
               <div
                 key={agent.id}
-                className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium border transition-all cursor-pointer
-                ${isActive
-                    ? "bg-linear-to-r from-indigo-500 to-violet-600 text-white border-transparent shadow-[0_1px_8px_rgba(99,102,241,.35)]"
-                    : "bg-white/[0.03] text-slate-400 border-white/[0.06] hover:bg-white/[0.07]"
+                className={`
+                  flex-shrink-0 inline-flex items-center gap-2
+                  px-3.5 py-2 rounded-xl text-xs font-semibold
+                  border transition-all duration-200 cursor-pointer
+                  ${isActive
+                    ? "bg-gradient-to-r from-indigo-500 to-violet-600 text-white border-transparent shadow-md shadow-indigo-500/20"
+                    : "bg-white/[0.03] text-slate-400 border-white/[0.07] hover:bg-white/[0.08] hover:text-white"
                   }
-              `}
+                `}
                 onClick={() => setSelectedAgent(agent.id)}
               >
                 <Icon
