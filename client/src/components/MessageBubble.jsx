@@ -51,8 +51,9 @@ export default function MessageBubble({
     <div className={`flex flex-col ${isUser ? "items-end" : "items-start"}`}>
       {attachments.length > 0 && (
         <div
-          className={`flex flex-wrap gap-2 mb-2 max-w-[92vw] md:max-w-[72%] ${isUser ? "justify-end" : "justify-start"
-            }`}
+          className={`flex flex-wrap gap-2 mb-2 max-w-[92vw] md:max-w-[72%] ${
+            isUser ? "justify-end" : "justify-start"
+          }`}
         >
           {attachments.map((att, idx) => {
             const isImg =
@@ -90,9 +91,10 @@ export default function MessageBubble({
 
       <div
         className={`w-fit max-w-[92vw] md:max-w-[72%] px-4 py-2.5 rounded-2xl overflow-hidden leading-relaxed break-words
-          ${isUser
-            ? "bg-linear-to-br from-indigo-500 to-violet-700 text-white rounded-tr-sm"
-            : "text-slate-200 rounded-tl-sm"
+          ${
+            isUser
+              ? "bg-linear-to-br from-indigo-500 to-violet-700 text-white rounded-tr-sm"
+              : "text-slate-200 rounded-tl-sm"
           }`}
       >
         {images.length > 0 && (
