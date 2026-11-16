@@ -24,7 +24,7 @@ export default async function rateLimiter(userId, agent) {
     error.data = {
       success: false,
       agent,
-      limit: max,
+      limit: maxLimit,
       remainigTime: ttl,
       retryAfter: time,
       message: `You have reached the ${agent} limit (${maxLimit} requests/minute). Try again in ${time}.`,

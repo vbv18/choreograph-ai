@@ -1,17 +1,17 @@
 export default function errorMiddleware(error, req, res, next) {
+  const statusCode = error?.status || error?.statusCode || error?.response?.status || 500;
+  const errorData = error?.data || error?.response?.data;
+  const clientMessage = errorData?.message || error?.message || "Internal Server Error";
+
   console.error("[Agent-Controller Error]", {
-    status: error.response?.status,
-    message: error.message,
-    data: error.response?.data,
+    status: statusCode,
+    message: error?.message,
+    data: errorData,
   });
-
-  const statusCode = error?.response?.status || 500;
-
-  const clientMessage =
-    error?.response?.data?.message || error?.message || "Internal Server Error";
 
   return res.status(statusCode).json({
     status: false,
     message: clientMessage,
+    ...(errorData && { data: errorData }),
   });
 }
