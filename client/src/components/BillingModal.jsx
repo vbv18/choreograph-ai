@@ -76,7 +76,7 @@ export default function BillingModal({ open, onClose }) {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ duration: 0.25 }}
-            className="fixed right-0 top-0 z-50 flex h-screen w-full max-w-[380px] flex-col border-1 border-white/10 shadow-2xl"
+            className="fixed right-0 top-0 z-50 flex h-dvh w-full max-w-[380px] flex-col bg-[#13151c] border-l border-white/10 shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-labelledby="billing-title"

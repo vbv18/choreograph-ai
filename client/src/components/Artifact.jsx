@@ -161,10 +161,10 @@ export default function Artifact() {
 
   return (
     <aside
-      className={`h-full border-l border-white/[0.06] flex flex-col overflow-hidden shrink-0 bg-[#0a0c10] transition-all duration-300 z-20 ${
+      className={`h-full border-l border-white/[0.06] flex flex-col overflow-hidden shrink-0 bg-[#0a0c10] transition-all duration-300 ${
         isFullscreen
           ? "fixed inset-0 w-full z-50 bg-[#0a0c10]"
-          : "w-full sm:w-[480px] md:w-[540px] xl:w-[620px]"
+          : "fixed inset-y-0 right-0 z-40 w-full sm:w-[480px] lg:static lg:z-20 md:w-[540px] xl:w-[620px]"
       }`}
     >
       {/* Top Header */}

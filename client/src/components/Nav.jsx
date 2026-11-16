@@ -18,7 +18,7 @@ export default function Nav() {
 
   return (
     <div className="h-14 flex items-center justify-between pl-12 pr-4 lg:px-6 border-b border-white/[0.06] bg-[#0d0f14] shrink-0 select-none">
-      <div className="flex items-center gap-2.5 min-w-0">
+      <div className="flex items-center gap-2.5 min-w-0 pl-2">
         <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 shrink-0">
           <MessageSquare size={13} className="text-indigo-400" />
         </div>
@@ -39,13 +39,12 @@ export default function Nav() {
         <button
           onClick={() => dispatch(toggleArtifactOpen())}
           title={isArtifactOpen ? "Close Artifacts" : "Open Artifacts"}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer border ${
-            hasArtifacts
-              ? isArtifactOpen
-                ? "bg-indigo-500/15 text-indigo-300 border-indigo-500/30"
-                : "bg-white/[0.04] text-slate-300 hover:text-white border-white/[0.08] hover:border-indigo-500/30"
-              : "bg-white/[0.02] text-slate-400 hover:text-slate-200 border-white/[0.06]"
-          }`}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer border ${hasArtifacts
+            ? isArtifactOpen
+              ? "bg-indigo-500/15 text-indigo-300 border-indigo-500/30"
+              : "bg-white/[0.04] text-slate-300 hover:text-white border-white/[0.08] hover:border-indigo-500/30"
+            : "bg-white/[0.02] text-slate-400 hover:text-slate-200 border-white/[0.06]"
+            }`}
         >
           <Code2
             size={13}
