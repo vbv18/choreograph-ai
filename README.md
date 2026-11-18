@@ -1,0 +1,1 @@
+choreograph-ai-redis.ycumaq.ng.0001.eun1.cache.amazonaws.com:6379
